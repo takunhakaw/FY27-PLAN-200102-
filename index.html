@@ -168,6 +168,7 @@ body{margin:0;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-
 .lgbox h3{font-size:.95rem;margin:.4rem 0 .2rem}
 .lgbox label{font-size:.85rem;color:var(--muted);display:block;margin-bottom:.2rem}
 .lgbox select,.lgbox input[type=password],.lgbox input[type=text]{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:.6rem .65rem;font-size:16px}
+.lgnote{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:.6rem .75rem;display:grid;gap:.45rem;max-height:11rem;overflow-y:auto}.lgnote h3{margin:0;font-size:.9rem;color:var(--accent)}.lgnote .it{font-size:.85rem;line-height:1.5;color:var(--fg)}.lgnote .it small{color:var(--muted);margin-right:.4rem}.lgnote .it+.it{border-top:1px dashed var(--line);padding-top:.4rem}
 .lgerr{color:var(--bad);font-size:.85rem;min-height:1.3em}
 .more{position:relative}
 .more>summary{list-style:none;cursor:pointer;display:inline-block}
@@ -246,6 +247,18 @@ body{margin:0;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-
 
 /* ★★★ 部署 Apps Script 後,只需要把下面這一行換成「網頁應用程式網址」(以 /exec 結尾) ★★★ */
 var CFG={GAS_URL:'https://script.google.com/macros/s/AKfycbyumunDQR6zXwGbOT1D4_qNsW8AMWmXz_1T0bFiiVxMGBtC-LXzwX2gxMUzvUhBO8eoog/exec'};
+
+/* ★ 登入畫面公告:管理員要發公告時,新增/修改下面的項目即可(最新的放最前面)。
+   date:公告日期;title:標題(可省略);text:內文(可換行 \n);until:到這一天(含)後自動不顯示(可省略)。
+   清單是空的([])時,登入畫面不會出現公告區塊。 */
+var NOTICES=[
+  {date:'2026-11-12',title:'系統公告',text:'成果報告可由督導於「督導系統 → 成果報告下載」單份或批量下載。\n'}
+];
+function noticeHtml(){
+  var td=new Date(),t=td.getFullYear()+'-'+p2(td.getMonth()+1)+'-'+p2(td.getDate());
+  var L=NOTICES.filter(function(n){return n&&n.text&&(!n.until||t<=n.until)});
+  if(!L.length)return'';
+  return'<div class="lgnote" role="region" aria-label="公告"><h3>📢 公告</h3>'+L.map(function(n){return'<div class="it"><small>'+esc(n.date||'')+'</small>'+(n.title?'<b>'+esc(n.title)+'</b><br>':'')+esc(n.text).replace(/\n/g,'<br>')+'</div>'}).join('')+'</div>'}
 
 var VER='雲端版 v4.0',SKEY='fangan_sess',LKEY='fangan_lastuid',MAIL='takun_hakaw@worldvision.org.tw';
 window.__STANDALONE=true;
@@ -346,7 +359,7 @@ async function sync(){
 function loginFlow(prefUid,msg,lock){
   return new Promise(function(resolve){
     var o=document.createElement('div');o.className='lgov';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','lgt');
-    o.innerHTML='<form class="lgbox" id="lgf" autocomplete="on"><h2 id="lgt">方案成果管理系統</h2><div class="sub" style="margin:0">'+(lock?'登入已逾時,請重新輸入密碼。尚未同步的修改仍保留在這個裝置,登入後會自動補上傳。':'請選擇你的姓名,輸入密碼後登入。只能開啟自己的資料。')+'</div>'
+    o.innerHTML='<form class="lgbox" id="lgf" autocomplete="on"><h2 id="lgt">方案成果管理系統</h2><div class="sub" style="margin:0">'+(lock?'登入已逾時,請重新輸入密碼。尚未同步的修改仍保留在這個裝置,登入後會自動補上傳。':'請選擇你的姓名,輸入密碼後登入。只能開啟自己的資料。')+'</div>'+(lock?'':noticeHtml())
      +'<div><label for="lgu">我的姓名</label><select id="lgu" required><option value="">載入名單中…</option></select></div>'
      +'<div><label for="lgp">密碼(第一次請輸入系統預設密碼)</label><input id="lgp" type="password" autocomplete="current-password" required></div>'
      +'<label style="display:flex;gap:.4rem;align-items:center;margin:0"><input type="checkbox" id="lgs"> 顯示密碼</label>'
