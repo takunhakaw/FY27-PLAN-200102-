@@ -518,7 +518,7 @@ function by(a,k){return a.slice().sort(function(x,y){return x[k]>y[k]?1:x[k]<y[k
 function myRole(){var s=S.staff.get(uid);return s&&s.role||'社工'}
 function isSup(){return myRole()!=='社工'}
 function myName(){var s=S.staff.get(uid);return(s&&s.name)||profName||''}
-function ownerName(p){var s=S.staff.get(p.owner);return(s&&s.name)||(p.owner===uid?(myName()||'我'):names[p.owner])||'同工'}
+function ownerName(p){if(typeof TS!=='undefined'&&TS&&S===TS)return supOwner(p);var s=S.staff.get(p.owner);return(s&&s.name)||(p.owner===uid?(myName()||'我'):names[p.owner])||'同工'}
 function pst(p){return p.status==='結案待報告'||p.status==='已結案'?p.status:'執行中'}
 function pillCls(s){return s==='草稿'?'draft':s==='執行中'||s==='已結案'?'run':s==='結案待報告'?'info':'wait'}
 function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},2600)}
@@ -1904,7 +1904,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modalOpen&&
 
 /* ---------- 督導系統(唯讀整合全中心資料) ---------- */
 var TS=null,TM={loading:false,err:'',at:null,users:{}},PHC={};
-var SV={sub:'dash',fy:'',center:'',owner:'',st:'',warn:false,mon:'',mp:'',mo:'',ms:'',mq:'',mph:false,sel:{},rep:false,phRun:false,phDone:0,phTot:0,phErr:''};
+var SV={rsel:{},rbusy:false,rmsg:'',rerr:'',sub:'dash',fy:'',center:'',owner:'',st:'',warn:false,mon:'',mp:'',mo:'',ms:'',mq:'',mph:false,sel:{},rep:false,phRun:false,phDone:0,phTot:0,phErr:''};
 function supOn(){return!!(window.__isSup&&window.__isSup())}
 function withTeam(fn){var sv=S;S=TS;try{return fn()}finally{S=sv}}
 function supOwner(p){var u=TM.users[p.owner];if(u&&u.name)return u.name;var s=TS&&TS.staff.get(p.owner);return(s&&s.name)||'(未知同工)'}
@@ -1976,11 +1976,11 @@ function supView(){
     return h+(TM.err?'<div class="note bad">'+esc(TM.err)+'</div><button class="btn" data-a="supRefresh">再試一次</button>':'<div class="note info" role="status">正在從 Google 雲端整合所有社工的資料,人數與照片多時可能需要十幾秒…</div>');
   }
   if(TM.err)h+='<div class="note bad">'+esc(TM.err)+'(目前顯示的是上一次載入的資料)</div>';
-  var tabs=[['dash','中心總覽'],['ana','數據分析'],['poa','年度 POA(全中心)'],['mon','月度場次與照片']];
+  var tabs=[['dash','中心總覽'],['ana','數據分析'],['poa','年度 POA(全中心)'],['mon','月度場次與照片'],['rpt','成果報告下載']];
   h+='<div class="tabs nosp" role="tablist">'+tabs.map(function(t){return'<button role="tab" data-a="supsub" data-v="'+t[0]+'" aria-selected="'+(SV.sub===t[0])+'">'+t[1]+'</button>'}).join('')+'</div>';
-  return h+withTeam(function(){return SV.sub==='ana'?supAna():SV.sub==='mon'?supMon():SV.sub==='poa'?supPoa():supDash()});
+  return h+withTeam(function(){return SV.sub==='ana'?supAna():SV.sub==='mon'?supMon():SV.sub==='poa'?supPoa():SV.sub==='rpt'?supRpt():supDash()});
 }
-function supFilterBar(){
+function supFilterBar(noWarn){
   var fy={},ce={},ow={};TS.projects.forEach(function(p){fy[p.fy||'FY26']=1;ce[p.center||'']=1;ow[p.owner]=1});
   var o=function(arr,cur,all){return'<option value="">'+all+'</option>'+arr.map(function(v){return'<option value="'+esc(v[0])+'"'+(cur===v[0]?' selected':'')+'>'+esc(v[1])+'</option>'}).join('')};
   var owners=Object.keys(ow).map(function(id){return[id,(TM.users[id]&&TM.users[id].name)||'(未知同工)']}).sort(function(a,b){return a[1]>b[1]?1:-1});
@@ -1989,7 +1989,7 @@ function supFilterBar(){
   return'<div class="bar nosp" style="align-items:flex-end;margin:.2rem 0 1rem">'+fl('年度','fy',o(Object.keys(fy).sort().reverse().map(function(x){return[x,x]}),SV.fy,'全部年度'))
    +(cs.length>1?fl('中心','center',o(cs.map(function(x){return[x,x]}),SV.center,'全部中心')):'')
    +fl('社工','owner',o(owners,SV.owner,'全部社工'))+fl('狀態','st',o(['執行中','結案待報告','已結案'].map(function(x){return[x,x]}),SV.st,'全部狀態'))
-   +'<label style="display:flex;gap:.35rem;align-items:center;font-size:.88rem;padding-bottom:.45rem"><input type="checkbox" data-sc="warn"'+(SV.warn?' checked':'')+'> 只看有警示的方案</label></div>';
+   +(noWarn?'':'<label style="display:flex;gap:.35rem;align-items:center;font-size:.88rem;padding-bottom:.45rem"><input type="checkbox" data-sc="warn"'+(SV.warn?' checked':'')+'> 只看有警示的方案</label>')+'</div>';
 }
 
 /* ----- 1. 中心總覽 ----- */
@@ -2202,9 +2202,61 @@ function htmlToMht(html){
   return out+NL+'--'+B+'--'+NL;
 }
 
+/* ----- 5. 成果報告下載(單份/批量) ----- */
+function supRptProg(p,c){
+  var evs=c.EV.filter(function(e){return evSt(e)!=='取消'}),done=evs.filter(function(e){return evSt(e)==='已辦理'}),objs=kids('objectives',p.id);
+  var parts=[
+    {l:'場次已辦理',a:done.length,b:evs.length,miss:evs.length?(evs.length-done.length?'尚有 '+(evs.length-done.length)+' 場未辦理':''):'尚未建立場次'},
+    {l:'執行概況',a:done.filter(function(e){return String(e.summary||'').trim()}).length,b:done.length,miss:''},
+    {l:'活動照片',a:done.filter(function(e){return e.phN>0}).length,b:done.length,miss:''},
+    {l:'成效評估',a:objs.filter(function(o){return String(o.result||'').trim()}).length,b:objs.length,miss:''},
+    {l:'自評及期待',a:String(p.selfEval||'').trim()?1:0,b:1,miss:''}];
+  var miss=[],sum=0;
+  parts.forEach(function(x,i){
+    var r=x.b?x.a/x.b:0;sum+=r;
+    if(i===0){if(x.miss)miss.push(x.miss)}
+    else if(!x.b){miss.push(i===3?'尚無活動目標':'尚無已辦理場次')}
+    else if(x.a<x.b){miss.push(i===1?'缺執行概況 '+(x.b-x.a)+' 場':i===2?'缺照片 '+(x.b-x.a)+' 場':i===3?'成效評估未填 '+(x.b-x.a)+' 項':'自評及期待未填')}});
+  return{pct:Math.round(sum/parts.length*100),parts:parts,miss:miss};
+}
+function supRptRows(){return withTeam(function(){return supRows(supProjects()).map(function(r){r.g=supRptProg(r.p,r.c);return r})})}
+function supRptSelected(rows){return rows.filter(function(r){return SV.rsel[r.p.id]})}
+function supRpt(){
+  var rows=supRptRows(),sel=supRptSelected(rows),busy=SV.rbusy;
+  var h=supFilterBar(true)+'<div class="note info" role="status">督導可針對單一方案下載 Word 成果報告(含照片),也可勾選多個方案<b>批量下載</b>(打包成一個 .zip,內含每個方案一份 .doc)。「成果進度」依 5 項檢核計算:場次已辦理、已辦理場次有執行概況、有照片、活動目標已填成效評估、已填自評。未完成的方案也能下載,缺的項目會是空白。</div>';
+  if(SV.rmsg)h+='<div class="note warn" role="status">'+esc(SV.rmsg)+'</div>';
+  if(SV.rerr)h+='<div class="note bad" role="alert">'+esc(SV.rerr)+'</div>';
+  h+='<div class="actions nosp" style="margin-bottom:.6rem"><button class="btn sm" data-a="supRptAll"'+(busy?' disabled':'')+'>全選目前清單</button><button class="btn sm" data-a="supRptFull"'+(busy?' disabled':'')+'>只選進度 100%</button><button class="btn sm" data-a="supRptClosed"'+(busy?' disabled':'')+'>只選已結案/結案待報告</button><button class="btn sm" data-a="supRptNone"'+(busy?' disabled':'')+'>全部取消</button>'
+   +'<button class="btn pri" data-a="supRptBatch" id="rptbtn"'+(busy||!sel.length?' disabled':'')+'>批量下載('+sel.length+' 份 .zip)</button><span id="rptcnt" class="rem">已選 '+sel.length+' / 目前清單 '+rows.length+' 個方案</span></div>';
+  if(!rows.length)return h+'<div class="empty"><b>沒有符合條件的方案</b>請調整上方篩選條件。</div>';
+  var all=rows.length&&sel.length===rows.length;
+  h+='<div class="tw"><table><thead><tr><th style="width:2rem"><input type="checkbox" data-rpickall aria-label="全選"'+(all?' checked':'')+(busy?' disabled':'')+'></th><th>社工</th><th>方案</th><th>狀態</th><th>成果進度</th><th>尚缺項目</th><th></th></tr></thead><tbody>'
+   +rows.map(function(r){var p=r.p,g=r.g;
+     return'<tr><td><input type="checkbox" data-rpick value="'+esc(p.id)+'" aria-label="選取 '+esc(p.name||'')+'"'+(SV.rsel[p.id]?' checked':'')+(busy?' disabled':'')+'></td><td>'+esc(supOwner(p))+'</td><td><b>'+esc(p.name||'(未命名)')+'</b><div class="rem">'+esc(p.code||'')+(p.center?' ・ '+esc(p.center):'')+' ・ '+esc(p.fy||'FY26')+' '+esc(p.month||'')+'</div></td><td><span class="pill '+pillCls(pst(p))+'">'+esc(pst(p))+'</span></td>'
+      +'<td>'+meterHtml(g.pct)+'<div class="rem">場次 '+g.parts[0].a+'/'+g.parts[0].b+' ・ 概況 '+g.parts[1].a+'/'+g.parts[1].b+' ・ 照片 '+g.parts[2].a+'/'+g.parts[2].b+' ・ 成效 '+g.parts[3].a+'/'+g.parts[3].b+'</div></td>'
+      +'<td>'+(g.miss.length?g.miss.map(function(x){return'<span class="flag warn" style="display:inline-block;margin:0 .2rem .2rem 0">'+esc(x)+'</span>'}).join(''):'<span class="rem">✔ 已完整</span>')+'</td>'
+      +'<td class="act"><button class="btn sm" data-a="supRptOne" data-id="'+esc(p.id)+'"'+(busy?' disabled':'')+'>下載 Word</button></td></tr>'}).join('')
+   +'</tbody></table></div>';
+  return h;
+}
+function rptFileName(p){return String((p.code||'方案')+'_'+(p.name||'')+'_成果報告').replace(/[\\\/:*?"<>|\r\n]+/g,'_')}
+async function supReportMht(p){
+  var evs=[];TS.events.forEach(function(e){if(e.projectId===p.id&&e.phN>0)evs.push(e)});
+  if(evs.length){await supFetchPh(evs);await supSmallAll(evs)}
+  return withTeam(function(){
+    var bak=[];
+    S.events.forEach(function(e){if(e.projectId===p.id){bak.push([e,e.photos]);var l=phCache(e);e.photos=l?l.map(function(x){return{u:x.su||x.u,c:x.c||''}}):[]}});
+    try{return reportMht(p,calc(p.id))}
+    finally{bak.forEach(function(b){if(b[1]===undefined)delete b[0].photos;else b[0].photos=b[1]})}
+  });
+}
+
 /* ----- 事件 ----- */
 document.addEventListener('change',function(e){
   var t=e.target;if(!t||!t.closest||!TS)return;
+  if(t.hasAttribute('data-rpick')||t.hasAttribute('data-rpickall')){
+    if(t.hasAttribute('data-rpickall')){supRptRows().forEach(function(r){SV.rsel[r.p.id]=t.checked})}else SV.rsel[t.value]=t.checked;
+    sched();return}
   if(t.hasAttribute('data-pick')){SV.sel[t.value]=t.checked;var n=supSelEvents().length,c=document.getElementById('selcnt'),b=document.getElementById('repbtn');if(c)c.textContent='已選 '+n+' 場(目前清單 '+supMonList().length+' 場)';if(b){b.disabled=!n;b.textContent='產生月報('+n+' 場)'}if(SV.rep){if(!n)SV.rep=false;else supRepPhotos();sched()}return}
   var k=t.getAttribute('data-sc');if(!k)return;
   var v=t.type==='checkbox'?t.checked:t.value;
@@ -2215,6 +2267,31 @@ document.addEventListener('change',function(e){
 document.addEventListener('input',function(e){var t=e.target;if(t&&t.hasAttribute&&t.hasAttribute('data-sq')){SV.mq=t.value;clearTimeout(SV._qt);SV._qt=setTimeout(function(){sched();setTimeout(function(){var i=document.querySelector('[data-sq]');if(i){i.focus();try{i.setSelectionRange(i.value.length,i.value.length)}catch(x){}}},0)},350)}});
 Object.assign(A,{
   supsub:function(d){SV.sub=d.v;sched()},
+  supRptAll:function(){supRptRows().forEach(function(r){SV.rsel[r.p.id]=true});sched()},
+  supRptFull:function(){SV.rsel={};supRptRows().forEach(function(r){if(r.g.pct>=100)SV.rsel[r.p.id]=true});sched()},
+  supRptClosed:function(){SV.rsel={};supRptRows().forEach(function(r){if(pst(r.p)!=='執行中')SV.rsel[r.p.id]=true});sched()},
+  supRptNone:function(){SV.rsel={};sched()},
+  supRptOne:async function(d){
+    if(SV.rbusy||!downloads)return;var p=TS.projects.get(d.id);if(!p)return;
+    SV.rbusy=true;SV.rerr='';SV.rmsg='正在準備「'+(p.name||'')+'」的成果報告(含照片)…';sched();
+    try{var mht=await supReportMht(p);await downloads.save({filename:rptFileName(p)+'.doc',data:mht});toast('已儲存 Word 檔(.doc),用 Word 開啟,若跳出格式提示請選「是」')}
+    catch(e){if(!(e&&e.code==='declined'))SV.rerr='「'+(p.name||'')+'」下載失敗:'+String(e&&e.message||e)}
+    SV.rbusy=false;SV.rmsg='';sched();
+  },
+  supRptBatch:async function(){
+    if(SV.rbusy||!downloads)return;var list=supRptSelected(supRptRows()).map(function(r){return r.p});if(!list.length)return;
+    SV.rbusy=true;SV.rerr='';sched();
+    var files=[],fails=[],used={},enc=new TextEncoder();
+    for(var i=0;i<list.length;i++){var p=list[i];
+      SV.rmsg='批量產生中 '+(i+1)+' / '+list.length+':'+(p.name||'')+'(含照片,請勿關閉頁面)…';sched();
+      try{var mht=await supReportMht(p),nm=rptFileName(p);if(used[nm]){used[nm]++;nm+='('+used[nm]+')'}else used[nm]=1;files.push({name:nm+'.doc',data:enc.encode(mht)})}
+      catch(e){fails.push((p.name||p.code||'?')+':'+String(e&&e.message||e))}}
+    try{
+      if(files.length){await downloads.save({filename:'成果報告_'+today().replace(/-/g,'')+'_'+files.length+'份.zip',data:zipStore(files)});toast('已儲存 '+files.length+' 份成果報告(.zip),解壓縮後用 Word 開啟')}
+    }catch(e){if(!(e&&e.code==='declined'))fails.push('儲存壓縮檔失敗:'+String(e&&e.message||e))}
+    if(fails.length)SV.rerr='有 '+fails.length+' 份未能產生:'+fails.slice(0,3).join(';')+(fails.length>3?' 等':'');
+    SV.rbusy=false;SV.rmsg='';sched();
+  },
   supRefresh:function(){supLoad(true)},
   supProj:function(d){supProjOpen(d.id)},
   supSelAll:function(){supMonList().forEach(function(e){SV.sel[e.id]=true});if(SV.rep)supRepPhotos();sched()},
