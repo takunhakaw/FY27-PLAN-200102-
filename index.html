@@ -137,6 +137,7 @@ tr.neg td.bal{color:var(--bad);font-weight:700}
 .lay2{display:grid;grid-template-columns:17rem minmax(0,1fr);gap:1rem;align-items:start}
 @media (max-width:860px){.lay2{grid-template-columns:1fr}}
 .vers{display:grid;gap:.5rem}
+.versh{display:flex;overflow-x:auto;gap:.5rem;padding-bottom:.3rem}.versh .ver{flex:0 0 14rem;width:auto}
 .ver{text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.6rem .8rem;cursor:pointer}
 .ver[aria-current="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
 .ver b{display:flex;justify-content:space-between;gap:.4rem}
@@ -169,6 +170,17 @@ body{margin:0;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-
 .lgbox label{font-size:.85rem;color:var(--muted);display:block;margin-bottom:.2rem}
 .lgbox select,.lgbox input[type=password],.lgbox input[type=text]{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:.6rem .65rem;font-size:16px}
 .lgnote{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:.6rem .75rem;display:grid;gap:.45rem;max-height:11rem;overflow-y:auto}.lgnote h3{margin:0;font-size:.9rem;color:var(--accent)}.lgnote .it{font-size:.85rem;line-height:1.5;color:var(--fg)}.lgnote .it small{color:var(--muted);margin-right:.4rem}.lgnote .it+.it{border-top:1px dashed var(--line);padding-top:.4rem}
+.lgwrap{display:flex;gap:1rem;align-items:flex-start;justify-content:center;width:100%;max-width:58rem;margin:auto}
+.lgwrap .lgbox{margin:0;flex:0 0 24rem;max-width:24rem}
+.lgfun{flex:1 1 0;min-width:0;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;display:grid;align-content:start}
+.lgfun .ph{width:100%;height:14rem;object-fit:cover;display:block;background:var(--accent-soft)}
+.lgfun .emo{height:14rem;display:flex;align-items:center;justify-content:center;font-size:4.5rem;background:linear-gradient(135deg,var(--accent-soft),var(--info-bg))}
+.lgfun .tx{padding:1rem 1.2rem 1.2rem;display:grid;gap:.4rem}
+.lgfun .tag{font-size:.78rem;color:var(--accent);font-weight:700}
+.lgfun h3{margin:0;font-size:1.1rem}
+.lgfun p{margin:0;line-height:1.7;overflow-wrap:anywhere}
+.lgfun small{color:var(--muted)}
+@media (max-width:760px){.lgwrap{flex-direction:column;align-items:stretch}.lgwrap .lgbox{flex:none;max-width:none;width:100%}.lgfun .ph,.lgfun .emo{height:11rem}}
 .lgerr{color:var(--bad);font-size:.85rem;min-height:1.3em}
 .more{position:relative}
 .more>summary{list-style:none;cursor:pointer;display:inline-block}
@@ -254,6 +266,35 @@ var CFG={GAS_URL:'https://script.google.com/macros/s/AKfycbyumunDQR6zXwGbOT1D4_q
 var NOTICES=[
   {date:'2026-11-12',title:'系統公告',text:'成果報告可由督導於「督導系統 → 成果報告下載」單份或批量下載。\n'}
 ];
+/* ★ 登入畫面右側「今日小驚喜」:管理員要更新時,新增/修改下面的項目即可(每次開啟登入畫面會隨機挑一則,盡量不與上次重複)。
+   title:標題(可省略);text:內文(可換行 \n);img:照片網址(可填 GitHub 倉庫內的相對路徑,例如 'fun/otter.jpg',或 https:// 完整網址;可省略);
+   emoji:沒有照片時顯示的大圖示;credit:照片來源/說明(可省略);until:到這一天(含)後自動不顯示(可省略)。
+   清單是空的([])時,登入畫面維持單欄。照片請先取得授權或使用自己拍攝的照片,並避免出現兒童可辨識的面孔。 */
+var FUN=[
+  {title:'章魚有三顆心臟',text:'章魚有三顆心臟:兩顆負責把血液送到鰓,另一顆負責送到全身。\n今天也請記得:你的努力,有很多顆心在背後支持著你。',emoji:'🐙'},
+  {title:'海獺的小默契',text:'海獺睡覺時常會手牽著手,避免被海浪沖散。\n再忙的日子,也別忘了跟身邊的夥伴互相扶持一下。',emoji:'🦦'},
+  {title:'今日小提醒',text:'先深呼吸三次,喝一口水,再開始今天的工作。\n你做的每一件小事,都有孩子與家庭感受得到。',emoji:'☕'}
+];
+function funHtml(){return'<aside class="lgfun" id="lgfunbox" style="display:none" aria-label="今日小驚喜"></aside>'}
+function funCard(box,n,src){
+  var emo='<div class="emo" aria-hidden="true">'+esc(n.emoji||'🌱')+'</div>';
+  var pic=src?'<img class="ph" src="'+esc(src)+'" alt="'+esc(n.title||'今日小驚喜')+'" onerror="this.outerHTML=this.getAttribute(\'data-emo\')" data-emo="'+esc(emo)+'">':emo;
+  box.innerHTML=pic+'<div class="tx"><span class="tag">🌿 今日小驚喜</span>'+(n.title?'<h3>'+esc(n.title)+'</h3>':'')+(n.text?'<p>'+esc(n.text).replace(/\n/g,'<br>')+'</p>':'')+(n.credit?'<small>'+esc(n.credit)+'</small>':'')+'</div>';
+  box.style.display=''}
+/* 登入畫面右側卡片:優先讀督導在「督導系統 → 秘」設定的內容;雲端讀不到時,改用上方 FUN 清單(內建備用) */
+async function funLoad(o){
+  var box=o.querySelector('#lgfunbox');if(!box||!cfgOk())return;
+  var td=new Date(),t=td.getFullYear()+'-'+p2(td.getMonth()+1)+'-'+p2(td.getDate()),list=null,cloud=false;
+  try{var r=await api({action:'funlist'},10000);if(r&&r.ok&&Array.isArray(r.items)){list=r.items;cloud=true;try{localStorage.setItem('fangan_funcache',JSON.stringify(list))}catch(e){}}}catch(e){}
+  if(!list){try{list=JSON.parse(localStorage.getItem('fangan_funcache')||'null');cloud=!!list}catch(e){}}
+  if(!list||!list.length){list=FUN.filter(function(n){return n&&(n.text||n.img)&&(!n.until||t<=n.until)}).map(function(n,i){return Object.assign({id:'L'+i,local:1},n)})}
+  if(!list.length||!document.body.contains(o))return;
+  var last='';try{last=localStorage.getItem('fangan_lastfun')||''}catch(e){}
+  var pool=list.length>1?list.filter(function(n){return String(n.id)!==last}):list,n=pool[Math.floor(Math.random()*pool.length)];
+  try{localStorage.setItem('fangan_lastfun',String(n.id))}catch(e){}
+  funCard(box,n,n.local?n.img:'');
+  if(!n.local&&n.hasImg){try{var ri=await api({action:'funimg',id:n.id},20000);if(ri&&ri.ok&&ri.img&&document.body.contains(o))funCard(box,n,ri.img)}catch(e){}}
+}
 function noticeHtml(){
   var td=new Date(),t=td.getFullYear()+'-'+p2(td.getMonth()+1)+'-'+p2(td.getDate());
   var L=NOTICES.filter(function(n){return n&&n.text&&(!n.until||t<=n.until)});
@@ -359,13 +400,13 @@ async function sync(){
 function loginFlow(prefUid,msg,lock){
   return new Promise(function(resolve){
     var o=document.createElement('div');o.className='lgov';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','lgt');
-    o.innerHTML='<form class="lgbox" id="lgf" autocomplete="on"><h2 id="lgt">方案成果管理系統</h2><div class="sub" style="margin:0">'+(lock?'登入已逾時,請重新輸入密碼。尚未同步的修改仍保留在這個裝置,登入後會自動補上傳。':'請選擇你的姓名,輸入密碼後登入。只能開啟自己的資料。')+'</div>'+(lock?'':noticeHtml())
+    o.innerHTML='<div class="lgwrap"><form class="lgbox" id="lgf" autocomplete="on"><h2 id="lgt">方案成果管理系統</h2><div class="sub" style="margin:0">'+(lock?'登入已逾時,請重新輸入密碼。尚未同步的修改仍保留在這個裝置,登入後會自動補上傳。':'請選擇你的姓名,輸入密碼後登入。只能開啟自己的資料。')+'</div>'+(lock?'':noticeHtml())
      +'<div><label for="lgu">我的姓名</label><select id="lgu" required><option value="">載入名單中…</option></select></div>'
      +'<div><label for="lgp">密碼(第一次請輸入系統預設密碼)</label><input id="lgp" type="password" autocomplete="current-password" required></div>'
      +'<label style="display:flex;gap:.4rem;align-items:center;margin:0"><input type="checkbox" id="lgs"> 顯示密碼</label>'
      +'<div class="lgerr" id="lge" role="alert">'+esc(msg||'')+'</div>'
      +'<button class="btn pri" id="lgb" type="submit" style="padding:.6rem">登入</button>'
-     +'<div class="sub" style="margin:0;font-size:.78rem">'+VER+'。忘記密碼請聯絡系統管理員重設。</div></form>';
+     +'<div class="sub" style="margin:0;font-size:.78rem">'+VER+'。忘記密碼請聯絡系統管理員重設。</div></form>'+(lock?'':funHtml())+'</div>';
     document.body.appendChild(o);
     var sel=o.querySelector('#lgu'),pw=o.querySelector('#lgp'),err=o.querySelector('#lge'),btn=o.querySelector('#lgb');
     o.querySelector('#lgs').onchange=function(){pw.type=this.checked?'text':'password'};
@@ -394,7 +435,7 @@ function loginFlow(prefUid,msg,lock){
       }catch(e){setErr('無法連線到雲端,請檢查網路後再試。')}
       btn.disabled=false;btn.textContent='登入';pw.select();
     };
-    loadUsers();
+    loadUsers();funLoad(o);
   });
 }
 function reauth(){
@@ -435,10 +476,12 @@ var SUP_ROLES=['督導','總督導','區處長'];
 async function teamCall(body){
   var r=await api(Object.assign({token:session.token},body),150000);
   if(r&&r.err==='auth'){await reauth();r=await api(Object.assign({token:session.token},body),150000)}
-  if(!r||!r.ok)throw new Error(r&&r.err==='forbidden'?'此帳號沒有督導權限':r&&r.err==='auth'?'登入已逾時,請重新登入':(r&&r.msg)||'無法連線到雲端');
+  if(!r||!r.ok)throw new Error(r&&r.err==='bad'?'雲端程式(Apps Script)尚未更新,缺少此功能,請管理員貼上新程式並重新部署':r&&r.err==='forbidden'?'此帳號沒有督導權限':r&&r.err==='auth'?'登入已逾時,請重新登入':(r&&r.msg)||'無法連線到雲端');
   return r;
 }
 window.__isSup=function(){return!!session&&SUP_ROLES.indexOf(session.role)>=0};
+window.__fun={admin:function(){return teamCall({action:'funadmin'})},save:function(item,img){var b={action:'funsave',item:item};if(img!==undefined)b.img=img;return teamCall(b)},del:function(id){return teamCall({action:'fundel',id:id})},img:async function(id){var r=await api({action:'funimg',id:id},30000);return r&&r.ok?r.img:''}};
+window.__mypoa=function(){return teamCall({action:'mypoa'})};
 window.__team={load:function(){return teamCall({action:'team'})},photos:function(items){return teamCall({action:'photos',items:items})}};
 window.__localdb={uid:function(){return session&&session.uid},
   exportAll:async function(){var docs=[];Object.keys(store).forEach(function(c){Object.keys(store[c]).forEach(function(id){var e=store[c][id];if(!e.d)docs.push([c,id,e.v])})});return{app:'fangan',v:1,uid:session.uid,at:new Date().toISOString(),docs:docs}},
@@ -515,9 +558,17 @@ var COLS=['projects','objectives','audiences','budgets','memos','events','attend
 /* ---------- state ---------- */
 var db=null,user=null,downloads=null,uid=null,profName='',canWrite=true,ready=false,failed='';
 var S={};COLS.forEach(function(c){S[c]=new Map()});
+var SREAL=S; /* 真正的資料物件:withTeam 會暫時把 S 換成合成視圖,快照更新必須寫回這裡,否則在督導視圖內儲存的資料要重新整理才看得到 */
 var names={};
 var V={tab:'home',pid:null,ptab:'plan'};
 var raf=0;
+var MP={list:[],at:0,loading:false,err:''};
+async function mpLoad(){if(MP.loading||!window.__mypoa)return;MP.loading=true;try{var r=await window.__mypoa();MP.list=r.items||[];MP.err=''}catch(e){MP.err=String(e&&e.message||e)}MP.at=Date.now();MP.loading=false;sched()}
+function mpAll(){var res={},used={};if(!MP.list.length)return{map:res,pending:[]};var mine=[];S.projects.forEach(function(p){mine.push(p)});mine.sort(function(a,b){return(a.createdAt||0)-(b.createdAt||0)});
+  MP.list.forEach(function(a,i){if(a.pid&&S.projects.get(a.pid)){res[a.pid]=a;used[i]=1}});
+  mine.forEach(function(p){if(res[p.id])return;var best=-1;MP.list.forEach(function(a,i){if(used[i]||a.code!==p.code)return;if(best<0||(a.center===p.center&&MP.list[best].center!==p.center))best=i});if(best>=0){res[p.id]=MP.list[best];used[best]=1}});
+  return{map:res,pending:MP.list.filter(function(a,i){return!used[i]})}}
+function mpOf(p){return p?(mpAll().map[p.id]||null):null}
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -538,6 +589,7 @@ function toast(m){var t=document.createElement('div');t.className='toast';t.text
 function sched(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;render()})}
 
 /* ---------- calculations (the “virtual columns”) ---------- */
+function noPlanOf(p){if(!p)return false;if(p.noPlan==='1'||p.noPlan===true)return true;if(!POAON){var ma=mpOf(p);return!!(ma&&ma.noplan)}var cd=poaCodeFor(p),r=false;if(!cd)return false;S.poaPlans.forEach(function(pl){if(pl.center===p.center&&pl.noplan&&pl.noplan[cd])r=true});return r}
 function isActive(c){return c.status!=='已解除'}
 function fyOf(pid){var p=S.projects.get(pid);return(p&&p.fy)||'FY26'}
 function fyStart(fy){var n=parseInt(String(fy).replace(/\D/g,''),10);return 1999+(isNaN(n)?26:n)}/* FY26 = 2025/10–2026/09:10月所在的曆年 = 2000+FY數字−1 */
@@ -556,9 +608,25 @@ function projDateFix(d){
 function monthDate(fy,m){var n=parseInt(m,10),y=fyStart(fy)+(n>=10?0:1);return new Date(y,n-1,1)}
 function monthFull(pid,m){if(!m)return'';var d=monthDate(fyOf(pid),m);return m+'('+d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+')'}
 function isDue(c){if(!isActive(c)||MONTHS.indexOf(c.toMonth)<0)return false;return monthDate(fyOf(c.projectId),c.toMonth)<=new Date()}
-function poaBinds(center){var m={};S.poaPlans.forEach(function(pl){if(center&&pl.center!==center)return;var vs=versionsOf(pl.id),l=vs[vs.length-1];if(l&&l.binds)Object.keys(l.binds).forEach(function(c){if(l.binds[c])m[c]=l.binds[c]})});return m}
-function poaCodeFor(p){var b=poaBinds(p.center),k=Object.keys(b);for(var i=0;i<k.length;i++)if(b[k[i]]===p.id)return k[i];return(p.code&&b[p.code]&&b[p.code]!==p.id)?'':(p.code||'')}
-function effPoa(p){var best=null,cd=poaCodeFor(p);S.poaPlans.forEach(function(pl){if(pl.center!==p.center)return;var vs=versionsOf(pl.id),l=vs[vs.length-1];if(!l)return;var t=0,f=false;(l.lines||[]).forEach(function(x){if(x.c===cd){t+=Number(x.a)||0;f=true}});if(f)best={amount:Math.round(t*100)/100,ver:l.ver,fy:pl.fy}});return best}
+function poaBinds(center){var m={};if(!POAON)return m;S.poaPlans.forEach(function(pl){if(center&&pl.center!==center)return;var vs=versionsOf(pl.id),l=vs[vs.length-1];if(l&&l.binds)Object.keys(l.binds).forEach(function(c){if(l.binds[c])m[c]=l.binds[c]})});return m}
+function poaPrior(center){var r=[];if(!POAON)return r;S.poaPlans.forEach(function(pl){if(center&&pl.center!==center)return;var vs=versionsOf(pl.id),l=vs[vs.length-1];if(!l||!l.prior)return;Object.keys(l.prior).forEach(function(c){(l.prior[c]||[]).forEach(function(id){if(id)r.push([c,id])})})});S.poaPlans.forEach(function(pl){if(center&&pl.center!==center)return;var vs=versionsOf(pl.id),l=vs[vs.length-1];if(!l||!l.more)return;Object.keys(l.more).forEach(function(c){(l.more[c]||[]).forEach(function(id){if(id)r.push([c,id])})})});return r}
+function poaCodeFor(p){var b=poaBinds(p.center),k=Object.keys(b);for(var i=0;i<k.length;i++)if(b[k[i]]===p.id)return k[i];var pr=poaPrior(p.center);for(var j=0;j<pr.length;j++)if(pr[j][1]===p.id)return pr[j][0];return p.code||''}
+function poaSplit(l,cd,center,pid){
+  var t=0;(l.lines||[]).forEach(function(x){if(x.c===cd)t+=Number(x.a)||0});t=Math.round(t*100)/100;
+  var al=(l.alloc&&l.alloc[cd])||{},pri=((l.prior&&l.prior[cd])||[]),parts=[];
+  S.projects.forEach(function(x){if(x.center===center&&poaCodeFor(x)===cd&&pri.indexOf(x.id)<0)parts.push(x)});
+  parts.sort(function(a,b){return String(a.name).localeCompare(String(b.name))||(a.id>b.id?1:-1)});
+  var r={total:t,n:parts.length,split:parts.length>1,est:false,amount:t,map:{}};
+  if(parts.length<=1){parts.forEach(function(x){r.map[x.id]=t});if(pid&&pri.indexOf(pid)>=0&&al[pid]!=null)r.amount=Number(al[pid])||0;return r}
+  var used=0,free=[];
+  parts.forEach(function(x){if(al[x.id]!=null&&al[x.id]!==''){r.map[x.id]=Math.round((Number(al[x.id])||0)*100)/100;used+=r.map[x.id]}else free.push(x)});
+  var rest=Math.max(0,Math.round((t-used)*100)/100);
+  free.forEach(function(x,i){var v=i===free.length-1?Math.round((rest-Math.floor(rest/free.length*100)/100*(free.length-1))*100)/100:Math.floor(rest/free.length*100)/100;r.map[x.id]=v});
+  r.est=free.length>0;r.estIds=free.map(function(x){return x.id});
+  if(pid){if(r.map[pid]!=null){r.amount=r.map[pid];r.est=r.estIds.indexOf(pid)>=0}else if(pri.indexOf(pid)>=0&&al[pid]!=null)r.amount=Number(al[pid])||0;else r.est=true}
+  return r}
+function effPoa(p){if(!POAON){var ma=mpOf(p);return ma?{amount:Number(ma.amount)||0,ver:ma.ver,fy:ma.fy,code:ma.code,codeTotal:Number(ma.total)||0,split:false,est:false,n:1,months:ma.months||{},mp:true}:null}var best=null,cd=poaCodeFor(p);S.poaPlans.forEach(function(pl){if(pl.center!==p.center)return;var vs=versionsOf(pl.id),l=vs[vs.length-1];if(!l)return;var f=false;(l.lines||[]).forEach(function(x){if(x.c===cd)f=true});if(!f)return;var sp=poaSplit(l,cd,p.center,p.id);best={amount:sp.amount,ver:l.ver,fy:pl.fy,code:cd,codeTotal:sp.total,split:sp.split,est:sp.est&&sp.split,n:sp.n}});return best}
+function poaSplitNote(e){if(!e||!e.split)return'';return'(同事工編碼 '+e.code+' 共 '+e.n+' 個方案,編碼全年 $'+money(e.codeTotal)+',本方案分配 $'+money(e.amount)+(e.est?',尚未設定分配額,暫以平均估算':'')+')'}
 function poaAmt(p){var e=effPoa(p);return e?e.amount:(Number(p.poa)||0)}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function fyRange(pid){return{min:'',max:'',label:fyOf(pid)}}
@@ -571,7 +639,7 @@ function calc(pid){
   var td=today(),fs=ymd(new Date(fyStart(p.fy||'FY26'),9,1)),ref=td>fs?td:fs,up=EV.filter(function(e){return e.date&&(e.endDate||e.date)>=ref&&e.status!=='取消'}).sort(function(a,b){return a.date>b.date?1:-1});
   var ep=effPoa(p),gap=(ep?ep.amount:(Number(p.poa)||0))-total;
   return{HC:HC,overdue:HC.filter(isDue),B:B,E:E,C:C,A:A,T:T,EV:EV,M:M,total:total,spent:spent,held:held,bal:total-spent,avail:total-spent-held,rate:pct(spent,total),
-    gap:gap,needMemo:false,poaOver:!!ep&&gap<0,expPeople:sum(A,'expPeople'),expTimes:expT,actPeople:A.reduce(function(s,a){return s+audActual(pid,a).people},0),actHH:A.reduce(function(s,a){return s+audActual(pid,a).hh},0),
+    gap:gap,needMemo:false,poaOver:!!ep&&gap<0&&!noPlanOf(p),expPeople:sum(A,'expPeople'),expTimes:expT,actPeople:A.reduce(function(s,a){return s+audActual(pid,a).people},0),actHH:A.reduce(function(s,a){return s+audActual(pid,a).hh},0),
     actTimes:actT,actHHTimes:sum(T,'hhTimes'),timeRate:pct(actT,expT),next:up[0]||null,ref:ref};
 }
 function uniq(pid,kind,key){var m={};kids('attendances',pid).forEach(function(a){if(!kind||a.kind===kind)(a[key]||[]).forEach(function(x){m[x]=1})});return Object.keys(m).length}
@@ -608,11 +676,12 @@ function catOf(b){return b.cat||'未分類'}
 function catList(B){var m={},o=[];B.forEach(function(b){var c=catOf(b);if(!m[c]){m[c]=1;o.push(c)}});var rk=function(c){var i=CATS.indexOf(c);return c==='未分類'?999:i>=0?i:500};o.sort(function(a,b){return rk(a)-rk(b)||(a>b?1:-1)});return o}
 var ENT={
  project:{col:'projects',label:'方案基本資料',fields:function(){return[
-  {k:'code',l:'事工編碼',t:'text',req:1,help:'只需填編碼'},
+  {k:'code',l:'事工編碼',t:'text',req:1,list:MP.list.map(function(a){return a.code}),help:MP.list.length?'督導已派發的編碼可直接從清單選取,選取後會自動帶入名稱、年度、月份與 POA 額度限制。':'只需填編碼'},
   {k:'name',l:'方案名稱',t:'text',req:1},
   {k:'center',l:'執行中心',t:'text',req:1,ph:'例如 OO中心'},
   {k:'fy',l:'年度',t:'select',opts:FYLIST,req:1,help:'年度為 10月至隔年9月。FY26 = 2025/10 至 2026/09;FY27 = 2026/10 至 2027/09'},
   {k:'month',l:'計畫月份(該方案開始執行之月份)',t:'select',opts:MONTHS,req:1,help:'填寫方案「開始執行」的月份。若填了下方「執行起日」,會自動以起日的月份為準。'},
+  {k:'noPlan',l:'計畫書',t:'select',opts:[{v:'',l:'需要計畫書(預設)'},{v:'1',l:'該案無須計畫書(仍須執行)'}],help:'有些方案不需撰寫計畫書也可執行:選「無須計畫書」後,仍可登記場次、出席、核銷與成果報告,但不要求編列預算,也不會比對年度 POA 的計畫書經費。'},
   {k:'sdgs',l:'依據 SDGs',t:'multi',opts:SDGS},
   {k:'cwbo',l:'CWBO',t:'tags',help:'依 POA 指導原則填寫,多項以逗號分隔'},
   {k:'strategy',l:'服務策略',t:'tags',help:'依 POA 指導原則填寫,多項以逗號分隔'},
@@ -620,7 +689,7 @@ var ENT={
   {k:'startDate',l:'執行起日',t:'date'},{k:'endDate',l:'執行迄日',t:'date'},
   {k:'place',l:'執行地點/場地',t:'text'},
   {k:'method',l:'執行方式及內容',t:'long',help:'概述即可,逐場流程請在「活動場次」填寫'},
-  {k:'poa',l:'POA 預算(元,備用)',t:'money',help:'方案已登記在「年度 POA」時,以年度 POA 為準;未登記才使用這裡的數字'}]},
+  {k:'poa',l:'POA 預算(元,備用)',t:'money',help:'年度 POA 由督導在督導系統統一建置並綁定方案;這裡只在方案尚未綁定 POA 時作為備用數字'}]},
   init:function(){return{fy:curFY(),month:MONTHS[0]}},
   validate:function(v){return projDateFix(v)}},
  objective:{col:'objectives',label:'活動目標',fields:function(){return[
@@ -643,6 +712,7 @@ var ENT={
   {k:'price',l:'單價(元)',t:'money',req:1},{k:'qty',l:'數量',t:'num',req:1},{k:'unit',l:'單位',t:'text',ph:'式 / 人 / 份'},
   {k:'note',l:'說明',t:'text',help:'各單項不足時得核實勻支'}]},
   init:function(pid){return{month:MONTHS[0],qty:1,no:kids('budgets',pid).length+1}},
+  validate:function(v,old,pid){var p=S.projects.get(pid),ep=effPoa(p);if(!ep||noPlanOf(p))return;var t=Math.round((v.price||0)*(v.qty||0)*100)/100,o=sum(kids('budgets',pid).filter(function(b){return!old||b.id!==old.id}),'total');if(o+t>ep.amount+0.005)return'計畫書經費合計會變成 $'+money(Math.round((o+t)*100)/100)+',超過督導派發的 POA 額度 $'+money(ep.amount)+'(最多還可編列 $'+money(Math.max(0,Math.round((ep.amount-o)*100)/100))+')。'},
   before:function(v){v.total=Math.round((v.price||0)*(v.qty||0)*100)/100;return v}},
  event:{col:'events',label:'活動場次',fields:function(pid){var r=fyRange(pid);return[
   {k:'date',l:'日期(起)',t:'date',req:1,help:'單日活動只填這一欄;日期不設年度限制,請自行確認年份'},
@@ -684,16 +754,16 @@ var ENT={
     var mo=0;kids('participants',pid).forEach(function(x){mo=Math.max(mo,x.order||0)});
     for(var j=0;j<v.codes.length;j++)await saveDoc('participants',null,{projectId:pid,kind:v.kind,code:v.codes[j],hh:(v.hh||'').trim(),note:v.note||'',order:++mo});
     toast('已新增 '+v.codes.length+' 位')}},
- expenditure:{col:'expenditures',label:'核銷紀錄',fields:function(pid,x){var ni=x&&x.desc,bf={k:'budgetId',l:'扣抵預算項目',t:'select',opts:budgetOpts(pid),req:ni?0:1};if(ni)bf.help='留空 = 未列入預算的新增項目(「'+x.desc+'」)';return[
+ expenditure:{col:'expenditures',label:'核銷紀錄',fields:function(pid,x){var np=noPlanOf(S.projects.get(pid)),ni=(x&&x.desc)||np,bf={k:'budgetId',l:'扣抵預算項目',t:'select',opts:(np?[{v:'',l:'(無須計畫書,不扣抵預算項目)'}]:[]).concat(budgetOpts(pid)),req:ni?0:1};if(x&&x.desc)bf.help='留空 = 未列入預算的新增項目(「'+x.desc+'」)';var arr=[
   bf,
   {k:'useMonth',l:'實際歸屬月份(使用保留款時選填)',t:'select',opts:[{v:'',l:'(依預算項目的月份)'}].concat(MONTHS.map(function(m){return{v:m,l:m}})),help:'例如 10 月預算保留、6 月才使用:預算項目仍選 10 月的項目,這裡選「6月」,年度 POA 與月份彙總就會算在 6 月。'},
   {k:'moveNote',l:'系統異動備註',t:'text',help:'選了不同月份時,留空會自動寫入「X月預算保留,改列Y月使用」;也可自行填寫(會帶入成果報告)'},
   {k:'eventId',l:'對應場次(選填)',t:'select',opts:eventOpts(pid)},
   {k:'date',l:'核銷日期',t:'date',req:1},{k:'amount',l:'金額(元)',t:'money',req:1},
-  {k:'receipt',l:'憑證/單據號',t:'text'},{k:'account',l:'會計科目(選填)',t:'text'},{k:'diffNote',l:'差異說明',t:'text',help:'實際與計畫不同時填寫,會帶入成果報告'}]},
+  {k:'receipt',l:'憑證/單據號',t:'text'},{k:'account',l:'會計科目(選填)',t:'text'},{k:'diffNote',l:'差異說明',t:'text',help:'實際與計畫不同時填寫,會帶入成果報告'}];if(np)arr.splice(1,0,{k:'desc',l:'費用說明(無計畫書,請寫明用途)',t:'text',req:1});return arr},
   init:function(){return{date:today()}},
   before:function(v){var b=S.budgets.get(v.budgetId);if(v.useMonth&&b&&v.useMonth===b.month)v.useMonth='';if(v.useMonth&&b&&!v.moveNote)v.moveNote=b.month+'預算保留,改列'+v.useMonth+'使用';if(!v.useMonth&&v.moveNote&&/預算保留,改列/.test(v.moveNote))v.moveNote='';return v},
-  validate:function(v,old,pid){if(old&&old.src==='import')return;var c=calc(pid);if(v.amount>c.avail+(old?old.amount:0))return'金額超過方案可用餘額 $'+money(c.avail+(old?old.amount:0))+'。'}},
+  validate:function(v,old,pid){if(old&&old.src==='import')return;var c=calc(pid);if(noPlanOf(S.projects.get(pid)))return;if(v.amount>c.avail+(old?old.amount:0))return'金額超過方案可用餘額 $'+money(c.avail+(old?old.amount:0))+'。'}},
  carryover:{col:'carryovers',label:'經費保留/展延單',fields:function(pid){return[
   {k:'budgetId',l:'保留的預算項目(選填)',t:'select',opts:[{v:'',l:'(不指定:該月計畫書經費整體剩餘)'}].concat(budgetOpts(pid)),help:'選了項目,這筆保留會顯示在「預算」頁該項目的「保留展延」欄並扣抵該項目餘額,保留所屬月份自動帶入該項目的月份。'},
   {k:'fromMonth',l:'保留所屬月份',t:'select',opts:[{v:'',l:'(選了預算項目則自動帶入)'}].concat(MONTHS.map(function(m){return{v:m,l:m}})),help:'這筆經費是哪個月份的計畫書經費剩餘、申請保留的'},
@@ -731,6 +801,9 @@ var ENT={
   {k:'selfEval',l:'執行成果之自評、困難及期待',t:'long'},
   {k:'survey',l:'問卷分析',t:'long'}]}},
  profile:{col:'staff',label:'姓名與身分',fields:function(){return[{k:'name',l:'顯示姓名',t:'text',req:1,help:'會顯示在方案的「主責社工」與報告中'},{k:'role',l:'身分',t:'select',opts:ROLES,req:1,help:'決定看到的按鈕:督導以上可看全部方案並簽核'}]}},
+ funitem:{col:'staff',label:'小驚喜',fields:function(){return[{k:'title',l:'標題(選填)',t:'text'},{k:'text',l:'內文(可換行)',t:'long',help:'有趣的小知識、暖心小語、中心花絮都可以。'},{k:'emoji',l:'沒有照片時顯示的圖示',t:'text',ph:'例如 🐙'},{k:'photo',l:'照片(選填)',t:'photo',help:'登入前的畫面所有人都看得到,請使用自己拍攝或已取得授權的照片,避免出現兒童可辨識的面孔。'},{k:'credit',l:'照片來源/說明(選填)',t:'text'},{k:'until',l:'到期日(選填)',t:'date',help:'過了這天(含當天)就不再顯示;留空代表一直顯示。'},{k:'on',l:'狀態',t:'select',opts:[{v:'1',l:'顯示中'},{v:'0',l:'停用(暫不顯示)'}]}]},init:function(){return{on:'1'}},
+  validate:function(v){if(!String(v.text||'').trim()&&!v.photo)return'請至少填寫內文或上傳照片。'},
+  save:async function(v,old){var item={id:old&&old.id,title:v.title,text:v.text,emoji:v.emoji,credit:v.credit,until:v.until,on:v.on!=='0'},img;if(v.photo&&!(old&&old.photo===v.photo))img=v.photo;else if(!v.photo&&old&&old.hasImg)img=null;await window.__fun.save(item,img);toast('已儲存');SEC.items=null;secLoad()}},
  supnote:{col:'projects',label:'督導意見',fields:function(){return[{k:'supNote',l:'督導意見',t:'long'}]}}
 };
 
@@ -795,7 +868,9 @@ function openForm(entKey,pid,old,extra){
   var first=form.querySelector('input,select,textarea');if(first&&first.type!=='hidden')first.focus();
   wirePhoto(form);
   if(entKey==='project'){var sd=form.querySelector('[name="startDate"]'),ms=form.querySelector('[name="month"]');
-    if(sd&&ms)sd.addEventListener('change',function(){var m=/^\d{4}-(\d{2})/.exec(sd.value);if(m){ms.value=(+m[1])+'月'}})}
+    if(sd&&ms)sd.addEventListener('change',function(){var m=/^\d{4}-(\d{2})/.exec(sd.value);if(m){ms.value=(+m[1])+'月'}});
+    var ce=form.querySelector('[name="code"]');
+    if(ce&&!old&&MP.list.length)ce.addEventListener('change',function(){var a=MP.list.filter(function(x){return x.code===ce.value.trim()})[0];if(!a)return;var set=function(k,v){var el=form.querySelector('[name="'+k+'"]');if(el&&v&&!el.value)el.value=v};set('name',a.name);set('center',a.center);var fe=form.querySelector('[name="fy"]');if(fe&&a.fy)fe.value=a.fy;var m1=MONTHS.filter(function(m){return a.months&&a.months[m]})[0];if(m1&&ms)ms.value=m1;var ne=form.querySelector('[name="noPlan"]');if(ne)ne.value=a.noplan?'1':''})}
   form.addEventListener('submit',async function(ev){
     ev.preventDefault();var err=document.getElementById('merr');err.textContent='';
     var v={};
@@ -839,7 +914,7 @@ function projectCard(p){
   var c=calc(p.id),r=reminder(c),cls=c.rate>100?' over':c.rate>90?' hi':'';
   return'<button class="card" data-a="open" data-id="'+p.id+'">'
    +'<div style="display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start"><span class="t">'+esc(p.name||'(未命名)')+'</span><span class="pill '+pillCls(pst(p))+'">'+esc(pst(p))+'</span></div>'
-   +'<div class="m"><span>'+esc(p.center||'')+'</span><span>'+esc(p.fy||'FY26')+' '+esc(p.month||'')+'</span><span>編碼 '+esc(p.code||'-')+'</span>'+(V.tab==='all'||V.tab==='review'?'<span>主責 '+esc(ownerName(p))+'</span>':'')+'</div>'
+   +'<div class="m"><span>'+esc(p.center||'')+'</span><span>'+esc(p.fy||'FY26')+' '+esc(p.month||'')+'</span><span>編碼 '+esc(p.code||'-')+'</span>'+(noPlanOf(p)?'<span class="pill info">無須計畫書</span>':'')+(V.tab==='all'||V.tab==='review'?'<span>主責 '+esc(ownerName(p))+'</span>':'')+'</div>'
    +'<div class="bal"><span class="rem">可用餘額</span><b'+(c.avail<0?' style="color:var(--bad)"':'')+'>$'+money(c.avail)+'</b></div>'
    +'<div class="meter'+cls+'" role="img" aria-label="預算執行率 '+c.rate+'%"><i style="width:'+Math.min(100,c.rate)+'%"></i></div>'
    +'<div class="rem">執行率 '+c.rate+'% ・ 人次達成 '+c.timeRate+'%</div>'
@@ -852,7 +927,10 @@ function projectCard(p){
 function homeView(list,title,sub,showNew){
   var cards=list.length?'<div class="cards">'+list.map(projectCard).join('')+'</div>'
    :'<div class="empty"><b>'+(showNew?'還沒有方案':'目前沒有項目')+'</b>'+(showNew?'建立第一個方案後,預算、場次、核銷與成果報告都會在方案內完成。':'')+(showNew&&canWrite?'<div class="row"><button class="btn pri" data-a="newProject">新增方案</button>'+impBtn('project','')+'<button class="btn" data-a="sample">載入範例方案</button></div>':'')+'</div>';
-  return'<h1>'+esc(title)+'</h1><p class="sub">'+esc(sub)+'</p>'+(list.length&&showNew&&canWrite?'<div class="bar"><span></span><button class="btn pri" data-a="newProject">新增方案</button>'+impBtn('project','')+'</div>':'')+cards;
+  var pend=showNew?mpAll().pending:[],ban=pend.length?'<div class="note warn" role="status"><b>督導已派發 '+pend.length+' 個方案給你,尚未建立:</b><div style="display:grid;gap:.3rem;margin-top:.4rem">'+pend.map(function(a){return'<div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center"><span>'+esc(a.code)+' '+esc(a.name||'')+'(POA 額度 $'+money(a.amount)+(a.noplan?',無須計畫書':'')+')</span>'+(canWrite?'<button class="btn sm" data-a="mpCreate" data-i="'+MP.list.indexOf(a)+'">建立這個方案</button><button class="btn sm" data-a="mpImport" data-i="'+MP.list.indexOf(a)+'">一鍵匯入 Excel</button>':'')+'</div>'}).join('')+'</div></div>':'';
+  if(showNew){var hh=MP.at?new Date(MP.at):null,tm=hh?String(hh.getHours()).padStart(2,'0')+':'+String(hh.getMinutes()).padStart(2,'0'):'';
+    ban+=MP.err?'<div class="note bad" role="alert">無法取得督導派發資料:'+esc(MP.err)+' <button class="btn sm" data-a="mpRefresh">重新查詢</button></div>':'<div class="rem" style="margin-bottom:.6rem">督導派發:'+(MP.loading?'查詢中…':MP.list.length?'共派發 '+MP.list.length+' 個方案給你':'目前沒有派發給你的項目')+(tm?'(查詢於 '+tm+')':'')+' <button class="btn sm" data-a="mpRefresh"'+(MP.loading?' disabled':'')+'>重新查詢</button></div>'}
+  return'<h1>'+esc(title)+'</h1><p class="sub">'+esc(sub)+'</p>'+ban+(list.length&&showNew&&canWrite?'<div class="bar"><span></span><button class="btn pri" data-a="newProject">新增方案</button>'+impBtn('project','')+'</div>':'')+cards;
 }
 function statusActions(p,c){
   var h='',role=myRole();
@@ -873,13 +951,13 @@ function table(head,rows,foot,empty){
 function planTab(p,c){
   var kv='<dl class="kv"><dt>事工編碼</dt><dd>'+esc(p.code)+'</dd><dt>執行中心</dt><dd>台灣世界展望會'+esc(p.center)+'</dd><dt>主責社工</dt><dd>'+esc(ownerName(p))+'</dd><dt>計畫月份</dt><dd>'+esc(p.month)+'</dd>'
    +'<dt>依據 SDGs</dt><dd>'+esc((p.sdgs||[]).join('、')||'未填')+'</dd><dt>CWBO</dt><dd>'+esc((p.cwbo||[]).join('、')||'未填')+'</dd><dt>服務策略</dt><dd>'+esc((p.strategy||[]).join('、')||'未填')+'</dd>'
-   +'<dt>執行時間</dt><dd>'+esc(p.startDate||'未填')+(p.endDate&&p.endDate!==p.startDate?' 至 '+esc(p.endDate):'')+'</dd><dt>執行地點</dt><dd>'+esc(p.place||'未填')+'</dd><dt>年度 POA 登記額</dt><dd>$'+money(poaAmt(p))+(effPoa(p)?'(年度 POA v'+effPoa(p).ver+')':'(手填,尚未登記年度 POA)')+'</dd></dl>'
+   +'<dt>執行時間</dt><dd>'+esc(p.startDate||'未填')+(p.endDate&&p.endDate!==p.startDate?' 至 '+esc(p.endDate):'')+'</dd><dt>執行地點</dt><dd>'+esc(p.place||'未填')+'</dd><dt>年度 POA 登記額</dt><dd>$'+money(poaAmt(p))+(effPoa(p)?'(年度 POA v'+effPoa(p).ver+')'+esc(poaSplitNote(effPoa(p))):'(手填,尚未登記年度 POA)')+'</dd></dl>'
    +'<h3 style="margin-top:.9rem">需求評估</h3><div class="rest">'+esc(p.need||'未填')+'</div><h3 style="margin-top:.9rem">執行方式及內容</h3><div class="rest">'+esc(p.method||'未填')+'</div>';
   var ob=by(c.A&&kids('objectives',p.id),'no').map(function(o){return'<tr><td class="n">'+esc(o.no)+'</td><td class="rest">'+esc(o.text)+'</td><td>'+esc(o.indicator||'')+'</td><td>'+esc(o.tool||'')+'</td><td>'+esc(o.freq||'')+'</td><td class="act">'+rowBtns('objective',o.id)+'</td></tr>'});
   var au=KINDS.map(function(k){return c.A.filter(function(a){return a.kind===k})[0]}).filter(Boolean).map(function(a){
     var at=sum(c.T.filter(function(t){return t.kind===a.kind}),'times'),x=audActual(p.id,a);
     return'<tr><td>'+esc(a.kind)+'</td><td class="n">'+esc(a.expPeople||0)+'</td><td class="n">'+esc(a.expTimes||0)+'</td><td class="n">'+x.people+(x.auto?' <span class="pill run">自動</span>':'')+'</td><td class="n">'+at+'</td><td class="n">'+x.hh+(x.hhAuto?' <span class="pill run">自動</span>':'')+'</td><td class="n">'+pct(at,a.expTimes)+'%</td><td class="act">'+rowBtns('audience',a.id)+'</td></tr>'});
-  return sec('基本資料與策略',impBtn('basic')+(canWrite?'<button class="btn sm" data-a="edit" data-e="project" data-id="'+p.id+'">編輯</button>':''),kv)
+  return (noPlanOf(p)?'<div class="note info">本方案設定為「該案無須計畫書」:計畫書內容(需求評估、目標、預算等)可不填,仍須登記活動場次、出席、核銷並產出成果報告。</div>':'')+sec('基本資料與策略',impBtn('basic')+(canWrite?'<button class="btn sm" data-a="edit" data-e="project" data-id="'+p.id+'">編輯</button>':''),kv)
    +sec('活動目標與評估方法',impBtn('objective')+addBtn('objective','新增目標'),table(['#序號','活動目標','評估指標','評估工具','頻率',''],ob,'','尚未新增活動目標'),1)
    +sec('參與對象(預期與實際)',impBtn('audience')+addBtn('audience','新增對象'),table(['對象','#預期人數','#預期人次','#實際人數','#實際人次','#實際戶數','#人次達成率',''],au,
      '<tr><td>合計</td><td class="n">'+c.expPeople+'</td><td class="n">'+c.expTimes+'</td><td class="n">'+c.actPeople+'</td><td class="n">'+c.actTimes+'</td><td class="n">'+c.actHH+'</td><td class="n">'+c.timeRate+'%</td><td></td></tr>','尚未新增參與對象')
@@ -887,7 +965,9 @@ function planTab(p,c){
 }
 function budgetTab(p,c){
   var ep=effPoa(p),note='';
-  if(ep){var d=ep.amount-c.total;note=d<0?'<div class="note bad">計畫書經費 $'+money(c.total)+' 超過年度 POA 登記額 $'+money(ep.amount)+'(v'+ep.ver+')共 $'+money(-d)+',請調整預算,或到「年度 POA」辦理異動。</div>':'<div class="note info">年度 POA 登記額 $'+money(ep.amount)+'(v'+ep.ver+')・計畫書經費 $'+money(c.total)+' ・ '+(d?'尚有 $'+money(d)+' 未編入預算':'已全數編入預算')+'。</div>'}
+  if(noPlanOf(p)){}else if(ep){var d=ep.amount-c.total;var sn=ep.split?esc(poaSplitNote(ep)):'';note=d<0?'<div class="note bad">計畫書經費 $'+money(c.total)+' 超過年度 POA 登記額 $'+money(ep.amount)+'(v'+ep.ver+')共 $'+money(-d)+sn+(POAON?',請調整預算,或到「年度 POA」辦理異動。':',請調整預算,或請督導調整 POA。')+'</div>':'<div class="note info">'+(ep.mp?'督導派發的 POA 額度':'年度 POA 登記額')+' $'+money(ep.amount)+'(v'+ep.ver+')'+sn+(ep.mp&&ep.months&&Object.keys(ep.months).length?'(月別:'+MONTHS.filter(function(m){return ep.months[m]}).map(function(m){return m+' $'+money(ep.months[m])}).join('、')+')':'')+'・計畫書經費 $'+money(c.total)+' ・ '+(d?'尚有 $'+money(d)+' 未編入預算':'已全數編入預算')+'。</div>'}
+  else if(noPlanOf(p))note='<div class="note info">本方案設定為「該案無須計畫書」:不需編列預算,也不比對年度 POA 的計畫書經費。經費請在「核銷與展延」直接登記,並填寫費用說明,核銷金額仍會計入年度 POA 的已核銷。</div>';
+  else if(!POAON)note='<div class="note warn">督導尚未派發 POA 給這個方案(事工編碼 '+esc(p.code)+')。可先自行編列預算,待督導派發後,系統會以派發的 POA 額度檢查,超過時會限制儲存。</div>';
   else note='<div class="note warn">這個方案(事工編碼 '+esc(p.code)+')尚未登記在「年度 POA」。請到「年度 POA」以方案為單位登記,系統才能比對 POA 與計畫書經費。</div>';
   var HM=heldByMonth(p.id),MV=moveByMonth(p.id),SM=spentByMonth(p.id),months=MONTHS.filter(function(m){return c.B.some(function(b){return b.month===m})||SM[m]||MV.o[m]});
   var sel=V.bmonth&&months.indexOf(V.bmonth)>=0?V.bmonth:'all';
@@ -911,16 +991,16 @@ function partsSorted(pid){return kids('participants',pid).sort(function(a,b){ret
 function partStats(pid){var evs={},last={},tot={};kids('attendances',pid).forEach(function(a){tot[a.eventId]=1;var e=S.events.get(a.eventId);(a.roster||[]).forEach(function(cd){(evs[cd]=evs[cd]||{})[a.eventId]=1;if(e&&e.date&&(!last[cd]||e.date>last[cd]))last[cd]=e.date})});return{evs:evs,last:last,N:Object.keys(tot).length}}
 function phU(x){return typeof x==='string'?x:(x&&x.u)||''}
 function phC(x){return typeof x==='string'?'':(x&&x.c)||''}
-function evPhotoStrip(e){var ph=e.photos||[];if(!ph.length&&!canWrite)return'';return'<div class="chips" style="align-items:center">'+ph.slice(0,6).map(function(u){return'<img class="thumb" src="'+esc(phU(u))+'" alt="'+esc(phC(u)||'活動照片')+'" title="'+esc(phC(u))+'">'}).join('')+(ph.length>6?'<span class="rem">…共 '+ph.length+' 張</span>':'')+(canWrite?'<button class="btn sm" data-a="evPhotos" data-id="'+e.id+'">📷 照片('+ph.length+')上傳/刪除</button>':'')+'</div>'}
+function evPhotoStrip(e){var ph=e.photos||[];if(!ph.length&&!canWrite&&!e.noPhoto)return'';return'<div class="chips" style="align-items:center">'+ph.slice(0,6).map(function(u){return'<img class="thumb" src="'+esc(phU(u))+'" alt="'+esc(phC(u)||'活動照片')+'" title="'+esc(phC(u))+'">'}).join('')+(ph.length>6?'<span class="rem">…共 '+ph.length+' 張</span>':'')+(e.noPhoto&&!ph.length?'<span class="pill info">無須上傳照片</span>':'')+(canWrite?'<button class="btn sm" data-a="evPhotos" data-id="'+e.id+'">📷 照片('+ph.length+')上傳/刪除</button>':'')+'</div>'}
 function evPhotosDraw(){var s0=window.__ph,e=S.events.get(s0.id)||{};
-  document.getElementById('layer').innerHTML='<div class="ov"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="mt"><header id="mt">活動照片:'+esc(e.name||'')+'('+esc(evDate(e))+')</header><div style="padding:1rem 1.1rem;display:grid;gap:.8rem"><div class="note info" style="margin:0">上傳的照片會自動縮小,並依活動日期歸入成果報告「9. 相片及附件」。照片屬個人資料,請先取得同意;以側面照為主。</div><div class="actions"><input type="file" accept="image/*" multiple data-phfile aria-label="選擇照片(可多選)"><span class="rem">也可以直接按 Ctrl+V 貼上截圖</span></div><div id="phmsg" class="rem" role="status"></div><div class="phgrid">'+(s0.list.length?s0.list.map(function(u,i){return'<figure><img src="'+esc(phU(u))+'" alt="活動照片 '+(i+1)+'"><input type="text" data-phcap="'+i+'" value="'+esc(phC(u))+'" placeholder="照片說明(選填)" aria-label="第 '+(i+1)+' 張照片說明" style="width:100%"><button type="button" class="btn sm bad" data-a="evPhotoDel" data-i="'+i+'">刪除</button></figure>'}).join(''):'<p class="hint">尚未上傳照片</p>')+'</div><div class="foot"><button type="button" class="btn pri" data-a="mclose">完成</button></div></div></div></div>';modalOpen=true}
+  document.getElementById('layer').innerHTML='<div class="ov"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="mt"><header id="mt">活動照片:'+esc(e.name||'')+'('+esc(evDate(e))+')</header><div style="padding:1rem 1.1rem;display:grid;gap:.8rem"><label style="display:flex;gap:.5rem;align-items:flex-start;margin:0"><input type="checkbox" data-nophoto'+(e.noPhoto?' checked':'')+' style="margin-top:.25rem"><span><b>本場次無須上傳照片</b>(同一方案場次很多時,成果報告不必每場都放照片;勾選後督導系統不會因缺照片而警示。若之後上傳照片,會自動取消此勾選)</span></label><div class="note info" style="margin:0">上傳的照片會自動縮小,並依活動日期歸入成果報告「9. 相片及附件」。照片屬個人資料,請先取得同意;以側面照為主。</div><div class="actions"><input type="file" accept="image/*" multiple data-phfile aria-label="選擇照片(可多選)"><span class="rem">也可以直接按 Ctrl+V 貼上截圖</span></div><div id="phmsg" class="rem" role="status"></div><div class="phgrid">'+(s0.list.length?s0.list.map(function(u,i){return'<figure><img src="'+esc(phU(u))+'" alt="活動照片 '+(i+1)+'"><input type="text" data-phcap="'+i+'" value="'+esc(phC(u))+'" placeholder="照片說明(選填)" aria-label="第 '+(i+1)+' 張照片說明" style="width:100%"><button type="button" class="btn sm bad" data-a="evPhotoDel" data-i="'+i+'">刪除</button></figure>'}).join(''):'<p class="hint">尚未上傳照片</p>')+'</div><div class="foot"><button type="button" class="btn pri" data-a="mclose">完成</button></div></div></div></div>';modalOpen=true}
 function openEvPhotos(id){var e=S.events.get(id);if(!e)return;window.__ph={id:id,list:(e.photos||[]).map(function(x){return{u:phU(x),c:phC(x)}})};evPhotosDraw();
   if(pasteH)document.removeEventListener('paste',pasteH);
   pasteH=function(ev){var its=[].slice.call((ev.clipboardData&&ev.clipboardData.items)||[]).filter(function(x){return x.type.indexOf('image/')===0});if(its.length){ev.preventDefault();evPhotoAdd(its.map(function(x){return x.getAsFile()}))}};document.addEventListener('paste',pasteH)}
 async function evPhotoAdd(files){var s0=window.__ph;if(!s0)return;files=files.filter(Boolean);var bad=0,n=0;
   for(var i=0;i<files.length;i++){var msg=document.getElementById('phmsg');if(msg)msg.textContent='處理中… '+(i+1)+'/'+files.length;
     try{s0.list.push({u:await shrink(files[i],1000,220000),c:''});n++}catch(e){bad++}}
-  var e0=S.events.get(s0.id),auto=n>0&&e0&&e0.status!=='已辦理',up={photos:s0.list};if(n>0)up.status='已辦理';
+  var e0=S.events.get(s0.id),auto=n>0&&e0&&e0.status!=='已辦理',up={photos:s0.list};if(n>0){up.status='已辦理';up.noPhoto=false}
   try{await saveDoc('events',s0.id,up)}catch(e){toast('照片儲存失敗');return}
   if(auto)toast('已上傳照片,這個場次自動標示為「已辦理」');
   evPhotosDraw();var m2=document.getElementById('phmsg');if(m2)m2.textContent=(n?'已新增 '+n+' 張並儲存。':'')+(bad?bad+' 個檔案無法讀取(請選擇圖片檔)。':'')}
@@ -986,7 +1066,7 @@ function expGroups(pid){var m={};kids('expenditures',pid).forEach(function(x){va
 function expTab(p,c){
   var rows=[];expGroups(p.id).forEach(function(g){rows.push('<tr><th colspan="8" style="text-align:left;background:var(--accent-soft);color:var(--fg)">'+esc(g.label)+' 核銷　小計 $'+money(g.sum)+'(共 '+g.items.length+' 筆)</th></tr>');g.items.forEach(function(x){rows.push(expRow(x))})});
   function expRow(x){var b=S.budgets.get(x.budgetId),e=S.events.get(x.eventId);
-    return'<tr><td>'+esc(x.date)+'</td><td>'+esc(b?(b.cat?b.cat+'｜':'')+b.month+' '+b.item:(x.desc?x.desc+'(未列入預算)':'(項目已刪除)'))+(x.useMonth&&b&&x.useMonth!==b.month?' <span class="pill info">列入 '+esc(x.useMonth)+'</span>':'')+'</td><td>'+esc(e?e.name:'')+'</td><td class="n">'+money(x.amount)+'</td><td>'+esc(x.receipt||'')+'</td><td>'+esc(x.account||'')+'</td><td>'+esc((x.moveNote?x.moveNote+(x.diffNote?';':''):'')+(x.diffNote||''))+'</td><td class="act">'+rowBtns('expenditure',x.id)+'</td></tr>'}
+    return'<tr><td>'+esc(x.date)+'</td><td>'+esc(b?(b.cat?b.cat+'｜':'')+b.month+' '+b.item:(x.desc?x.desc+(noPlanOf(S.projects.get(x.projectId))?'(無須計畫書)':'(未列入預算)'):'(項目已刪除)'))+(x.useMonth&&b&&x.useMonth!==b.month?' <span class="pill info">列入 '+esc(x.useMonth)+'</span>':'')+'</td><td>'+esc(e?e.name:'')+'</td><td class="n">'+money(x.amount)+'</td><td>'+esc(x.receipt||'')+'</td><td>'+esc(x.account||'')+'</td><td>'+esc((x.moveNote?x.moveNote+(x.diffNote?';':''):'')+(x.diffNote||''))+'</td><td class="act">'+rowBtns('expenditure',x.id)+'</td></tr>'}
   var late=c.overdue.length?'<div class="note bad">有 '+c.overdue.length+' 筆保留經費已到達延展月份,合計 $'+money(sum(c.overdue,'amount'))+',請動支或解除保留。</div>':'';
   var top=c.C.length?'<div class="note '+(c.HC.length?'warn':'ok')+'"><b>本方案保留中經費總計 $'+money(c.held)+'</b>('+c.HC.length+' 筆)。已解除 '+(c.C.length-c.HC.length)+' 筆,累計曾保留 $'+money(sum(c.C,'amount'))+'。以下依「保留所屬月份」分組,方便逐月申請展延。</div>':'';
   var fm=function(x){var b=S.budgets.get(x.budgetId);return x.fromMonth||(b&&b.month)||''};
@@ -1060,6 +1140,7 @@ function reportBody(p,c){
     var cap=function(e){return'時間:'+esc(evDate(e)+' '+(e.start||''))+'<br>地點:'+esc(e.place||p.place||'')+'<br>內容:'+esc(e.name)};
     var body;
     if(items.length){var rws=[];for(var i=0;i<items.length;i+=2){var cs=[items[i],items[i+1]].map(function(x){return x?'<td style="width:50%;text-align:center"><img src="'+esc(x.u)+'" width="280" alt="活動照片"><div style="text-align:left;font-size:9.5pt">'+(x.c?'<b>'+esc(x.c)+'</b><br>':'')+'中心:'+co+'<br>'+cap(x.e)+'</div></td>':'<td style="width:50%">&nbsp;</td>'}).join('');rws.push('<tr>'+cs+'</tr>')}body=rws.join('')}
+    else if(g.list.every(function(e){return e.noPhoto}))body='<tr><td colspan="2">(本月場次皆設定為無須上傳照片)</td></tr>';
     else body='<tr><td style="width:62%;height:120pt">(本月尚未上傳照片,可自行貼上)</td><td>中心:'+co+'<br>'+cap(g.list[0])+'</td></tr>';
     return'<p style="margin-top:.6rem"><b>'+esc(ymLabel(g.key))+'</b>(共 '+g.list.length+' 場、'+items.length+' 張照片)</p><table class="ph" style="margin-bottom:.5rem"><tbody>'+body+'</tbody></table>'}).join('')||'<p>(尚無活動場次)</p>';
   h+='<h4>10. 問卷分析</h4><p>'+esc(p.survey||'')+'</p>';
@@ -1113,7 +1194,7 @@ function projectView(p){
 /* ---------- annual POA budget (registered per 方案) ---------- */
 var SEP='\u0001';
 var TEAMV=false;
-function supPoa(){var cw=canWrite;canWrite=false;TEAMV=true;try{return poaView()}finally{TEAMV=false;canWrite=cw}}
+function supPoa(){var cw=canWrite;canWrite=true;TEAMV=true;try{return poaView()}finally{TEAMV=false;canWrite=cw}}
 function planOwner(x){var u=TM.users[x._src];return(u&&u.name)||''}
 var PM={alloc:'POA 登記額',plan:'已編入方案計畫書',spent:'已核銷',left:'登記額 − 已核銷'};
 
@@ -1161,17 +1242,38 @@ function codeName(code,v){var n=v&&v.names&&v.names[code];if(n)return n;var p=pr
 function poaStats(center){
   var pl={},sp={};
   S.budgets.forEach(function(b){var pr=S.projects.get(b.projectId);if(!pr||pr.center!==center)return;var cd=poaCodeFor(pr);if(!cd)return;var k=cd+SEP+b.month;pl[k]=(pl[k]||0)+(Number(b.total)||0)});
-  S.expenditures.forEach(function(e){var b=S.budgets.get(e.budgetId);if(!b)return;var pr=S.projects.get(e.projectId);if(!pr||pr.center!==center)return;var cd=poaCodeFor(pr);if(!cd)return;var k=cd+SEP+(e.useMonth||b.month);sp[k]=(sp[k]||0)+(Number(e.amount)||0)});
+  S.expenditures.forEach(function(e){var b=S.budgets.get(e.budgetId);var pr=S.projects.get(e.projectId);if(!b&&!noPlanOf(pr))return;if(!pr||pr.center!==center)return;var cd=poaCodeFor(pr);if(!cd)return;var mo=b?(e.useMonth||b.month):(e.useMonth||(e.date?(+e.date.slice(5,7))+'月':''));if(!mo)return;var k=cd+SEP+mo;sp[k]=(sp[k]||0)+(Number(e.amount)||0)});
   return{plan:pl,spent:sp};
 }
 function sumMap(m){var t=0;Object.keys(m).forEach(function(k){t+=m[k]});return Math.round(t*100)/100}
 function codesOfMaps(){var c={};[].slice.call(arguments).forEach(function(m){Object.keys(m).forEach(function(k){c[k.split(SEP)[0]]=1})});return Object.keys(c).sort()}
 function mm(n){return n?money(n):'—'}
+function asgSlots(v,code){
+  if(!v)return[];
+  var AL=(v.alloc&&v.alloc[code])||{},amt=function(b){return b&&AL[b]!=null?AL[b]:''};
+  if(v.slots&&v.slots[code])return v.slots[code].map(function(ch){ch=ch||[];var b=(ch.length&&ch[ch.length-1].pid)||'';return{chain:ch,bind:b,amt:amt(b)}});
+  if(v.assign&&v.assign[code]){var ch=v.assign[code];var b0=ch.length?ch[ch.length-1].pid||'':'';return[{chain:ch,bind:b0,amt:amt(b0)}]}
+  var r=[],b=v.binds&&v.binds[code];if(b)r.push({chain:[],bind:b,amt:amt(b)});((v.more&&v.more[code])||[]).forEach(function(id){r.push({chain:[],bind:id,amt:amt(id)})});return r}
+function poaSlotFields(sls){var cur=sls.map(function(ch){return ch.length?ch[ch.length-1].pid:''}).filter(Boolean),pr=[];sls.forEach(function(ch){ch.slice(0,-1).forEach(function(a){if(a.pid&&pr.indexOf(a.pid)<0)pr.push(a.pid)})});return{bind:cur[0]||'',more:cur.slice(1),prior:pr}}
+function projsOfCode(code,center){var r=[];S.projects.forEach(function(x){if(x.center===center&&poaCodeFor(x)===code)r.push(x)});return r.sort(function(a,b){return String(a.name).localeCompare(String(b.name))})}
+function asgHtml(v,code){
+  var ss=asgSlots(v,code);
+  if(!ss.length)return'<br><small><span class="pill wait">未派發</span></small>';
+  return ss.map(function(sl,i){var ch=sl.chain,t,pj=sl.bind&&S.projects.get(sl.bind);
+    if(ch.length&&ch.some(function(a){return a.name}))t=ch.map(function(a,k){return esc(a.name||'?')+(a.left?'<span class="rem">(離職/已交接'+(a.leftNote?':'+esc(a.leftNote):'')+')</span>':'')+(k>0&&a.from?'<span class="rem">(自 '+esc(a.from)+' 起)</span>':'')}).join(' → ');
+    else t=pj?esc(supOwner(pj))+'<span class="rem">(依綁定方案推算)</span>':'<span class="pill wait">未派發</span>';
+    return'<br><small>'+(ss.length>1?'方案 '+(i+1)+' ':'')+'承辦:'+t+(pj?' ・ <span class="rem">'+esc(pj.name||'')+'</span>':'')+'</small>'}).join('')}
+function poaUserOpts(sel,none,cur){
+  var a=Object.keys(TM.users).map(function(k){return TM.users[k]}).sort(function(x,y){return String(x.name)>String(y.name)?1:-1});
+  var o='<option value="">'+none+'</option>';
+  a.forEach(function(u){o+='<option value="'+esc(u.id)+'"'+(u.id===sel?' selected':'')+'>'+esc(u.name)+(SUPR.indexOf(u.role)>=0?'('+u.role+')':'')+'</option>'});
+  if(sel&&!TM.users[sel])o+='<option value="'+esc(sel)+'" selected>'+esc((cur&&cur.name)||'?')+'(已不在名單)</option>';
+  return o}
 function poaView(){
   var plans=[];S.poaPlans.forEach(function(x){plans.push(x)});plans.sort(function(a,b){return(a.createdAt||0)-(b.createdAt||0)});
-  var h=TEAMV?'<p class="sub" style="margin-top:0">整合全中心社工登記的年度 POA 與各方案的計畫書、核銷(唯讀)。若同一中心有多位社工各自登記,可用下方按鈕切換。</p>':'<h1>年度 POA 預算</h1><p class="sub">以方案(事工編碼)為單位登記整年度的 POA 預算。每次經費異動都是整年度的新版本,以最新版本為準,全年總額必須等於原始 POA。</p>';
-  if(!plans.length&&TEAMV)return h+'<div class="empty"><b>全中心尚未有人建立年度 POA</b>請社工先在自己的帳號登記並同步,再按「重新整理資料」。</div>';
-  if(!plans.length)return h+'<div class="empty"><b>尚未建立年度 POA</b>先輸入原始 POA 年度總額,再逐一登記各方案的事工編碼、方案名稱與各月金額。之後每次經費異動都會留下新版本,可以隨時比對。'+(canWrite?'<div class="row"><button class="btn pri" data-a="poaNew">建立年度 POA</button><button class="btn" data-a="poaImportBtn">匯入 Excel 建立</button></div>':'')+'</div>';
+  var h=TEAMV?'<p class="sub" style="margin-top:0">年度 POA 由督導在這裡統一建置:匯入 Excel 或逐列登記各事工編碼的月別金額 → 派發給承辦社工並綁定其方案 → 社工年度中離職時用「交接」換人(離職者姓名保留)。系統會自動比對各方案的計畫書預算與核銷。</p>':'<h1>年度 POA 預算</h1><p class="sub">以方案(事工編碼)為單位登記整年度的 POA 預算。每次經費異動都是整年度的新版本,以最新版本為準,全年總額必須等於原始 POA。</p>';
+  
+  if(!plans.length)return h+'<div class="empty"><b>尚未建立年度 POA</b>先輸入原始 POA 年度總額,再逐一登記各方案的事工編碼、方案名稱與各月金額(可下載範本、用 Excel 匯入),接著派發給承辦社工並綁定方案。之後每次經費異動都會留下新版本,可以隨時比對。'+(canWrite?'<div class="row"><button class="btn pri" data-a="poaNew">建立年度 POA</button><button class="btn" data-a="poaImportBtn">匯入 Excel 建立</button></div>':'')+'</div>';
   var plan=S.poaPlans.get(V.planId)||plans[0];V.planId=plan.id;
   var vs=versionsOf(plan.id),latest=vs[vs.length-1];
   if(!latest)return h+'<div class="note warn">這份年度 POA 還沒有任何版本。</div>';
@@ -1195,9 +1297,25 @@ function poaView(){
     return'<button class="ver" data-a="poaver" data-id="'+v.id+'" aria-current="'+(v.id===sel.id)+'"><b><span>v'+v.ver+' '+(v.ver?'異動':'原始')+'</span>'+(v.id===latest.id?'<span class="pill run">生效中</span>':'')+'</b><small>'+esc(v.date||'')+(v.byName?' ・ '+esc(v.byName):'')+'</small><small>合計 $'+money(v.total)+(pv?' ・ 異動 '+d+' 格':'')+'</small>'+(v.reason&&v.ver?'<small>'+esc(v.reason)+'</small>':'')+(xferText(v)?'<small>'+esc(xferText(v))+'</small>':'')+(v.approver?'<small>核定:'+esc(v.approver)+'</small>':'')+'</button>'}).join('');
   var A=cellMap(sel.lines),P=prev?cellMap(prev.lines):null;
   var codes=codesOfMaps(A,L,st.plan,st.spent);
-  var srows=codes.map(function(code){var al=0,pl=0,sp=0;MONTHS.forEach(function(m){var k=code+SEP+m;al+=L[k]||0;pl+=st.plan[k]||0;sp+=st.spent[k]||0});var pr=projByCode(code,plan.center),bound=latest.binds&&latest.binds[code];
-    var stt=!pr?'<span class="pill wait">尚未建立方案</span>':al===0?'<span class="pill bad">未登記 POA</span>':sp>al+.005?'<span class="pill bad">核銷超過登記額</span>':pl>al+.005?'<span class="pill bad">計畫書超過登記額</span>':'<span class="pill run">正常</span>';
-    return'<tr><td><b>'+esc(code)+'</b></td><td>'+esc(codeName(code,latest))+(pr?'<br><small>'+(latest.binds&&latest.binds[code]?'<span class="pill run">已綁定</span> ':'<span class="pill wait">依編碼比對</span> ')+esc(pr.name)+(pr.code!==code?'(方案編碼 '+esc(pr.code||'無')+')':'')+'</small>':'')+'</td><td class="n">'+money(al)+'</td><td class="n">'+(pr?money(pl):'—')+'</td><td class="n">'+(pr?money(al-pl):'—')+'</td><td class="n">'+money(sp)+'</td><td class="n">'+pct(sp,al)+'%</td><td>'+stt+'</td><td class="act">'+(pr?'<button class="btn sm" data-a="'+(TEAMV?'supProj':'open')+'" data-id="'+pr.id+'">'+(TEAMV?'查看方案':'開啟方案')+'</button>':'')+'</td></tr>'});
+  var mcol=MONTHS.map(function(){return 0});
+  var srows=[];codes.forEach(function(code){var al=0,pl=0,sp=0,lm={},pm={};MONTHS.forEach(function(m,mi){var k=code+SEP+m;lm[m]=L[k]||0;pm[m]=st.plan[k]||0;al+=lm[m];pl+=pm[m];sp+=st.spent[k]||0;mcol[mi]+=lm[m]});
+    var npc=!!(plan.noplan&&plan.noplan[code]),ps=projsOfCode(code,plan.center),sls=asgSlots(latest,code),spl=al>0?poaSplit(latest,code,plan.center,null):null;
+    var its=(latest.items||[]).filter(function(i){return i.c===code}),kids2=[];
+    var asl=asgSlots(latest,code);
+    if(its.length>1){its.forEach(function(it){var pid='',si=-1;(it.slotIdx||[]).forEach(function(i){if(asl[i]){si=i;if(asl[i].bind)pid=asl[i].bind}});kids2.push({name:it.name,note:it.note||'',x:pid?S.projects.get(pid):null,aa:it.total,vals:it.vals||{},est:false,si:si,item:(latest.items||[]).indexOf(it),sl:si>=0?asl[si]:null})})}
+    else if(spl&&spl.split)ps.filter(function(x){return spl.map[x.id]!=null}).forEach(function(x){var si=-1;asl.forEach(function(z,i){if(z.bind===x.id)si=i});kids2.push({name:x.name,note:'',x:x,aa:spl.map[x.id],vals:null,est:!!(spl.estIds&&spl.estIds.indexOf(x.id)>=0),si:si,item:-1,sl:si>=0?asl[si]:null})});
+    var npAny=npc||ps.some(noPlanOf),stt;
+    if(TEAMV&&canWrite&&(!ps.length||npc))stt='<select data-noplan="'+esc(code)+'" aria-label="狀態" style="max-width:9.5rem"><option value=""'+(npc?'':' selected')+'>'+(ps.length?'需要計畫書':'尚未建立方案')+'</option><option value="1"'+(npc?' selected':'')+'>該案無須計畫書</option></select>'+(ps.length&&sp>al+.005?'<br><span class="pill bad">核銷超過登記額</span>':'');
+    else if(npAny)stt=sp>al+.005?'<span class="pill bad">核銷超過登記額</span>':'<span class="pill info">該案無須計畫書</span>';
+    else stt=!ps.length?'<span class="pill wait">尚未建立方案</span>':al===0?'<span class="pill bad">未登記 POA</span>':sp>al+.005?'<span class="pill bad">核銷超過登記額</span>':pl>al+.005?'<span class="pill bad">計畫書超過登記額</span>':'<span class="pill run">正常</span>';
+    var btns=TEAMV&&canWrite&&al>0?sls.map(function(sl,i){return'<button class="btn sm" data-a="poaHandover" data-code="'+esc(code)+'" data-slot="'+i+'">'+(sls.length>1?'方案'+(i+1)+' ':'')+(sl.chain.length?'交接/換人':'派發')+'</button>'}).join(' ')+(sls.length<6?' <button class="btn sm" data-a="poaHandover" data-code="'+esc(code)+'" data-slot="'+sls.length+'">＋'+(sls.length?'同編碼再加方案':'派發')+'</button>':''):'';
+    var openBtn=function(x){return'<button class="btn sm" data-a="'+(TEAMV?'supProj':'open')+'" data-id="'+x.id+'">'+(TEAMV?'查看':'開啟')+(ps.length>1?' '+esc(String(x.name||'').slice(0,6)):'方案')+'</button>'};
+    var mcells=MONTHS.map(function(m){var a=lm[m],p=pm[m];return'<td class="n'+(a||p?'':' z')+(p>a+.005?' over':'')+'">'+(a?'<b>'+money(a)+'</b>':'—')+(p?'<br><small>計 '+money(p)+'</small>':'')+'</td>'}).join('');
+    srows.push('<tr'+(kids2.length?' style="background:rgba(127,127,127,.16)"':'')+'><td><b style="font-size:1.05em">'+esc(code)+'</b></td><td>'+esc(codeName(code,latest))+(kids2.length?'':(TEAMV?asgHtml(latest,code):'')+(ps.length?'<br><small>'+(ps.length>1?'<span class="pill run">共 '+ps.length+' 個方案</span> 登記額 = 各方案計畫書經費合計':(sls.length?'<span class="pill run">已綁定</span> ':'<span class="pill wait">依編碼比對</span> ')+esc(ps.map(function(x){return x.name}).join('、')))+'</small>':''))+'</td><td>'+(kids2.length?'':'<small class="rem">'+esc((latest.notes&&latest.notes[code])||'')+'</small>')+'</td><td class="n">'+money(al)+'</td><td class="n">'+(ps.length?money(pl):'—')+'</td><td class="n">'+(ps.length?money(Math.round((al-pl)*100)/100):'—')+'</td><td class="n">'+money(sp)+'</td><td class="n">'+pct(sp,al)+'%</td>'+mcells+'<td>'+stt+'</td><td class="act">'+(kids2.length?'':btns)+(ps.length&&ps.length===1&&!kids2.length?' '+openBtn(ps[0]):'')+'</td></tr>');
+    kids2.forEach(function(k){var x=k.x,own={},ot=0,os=0,aa=k.aa;
+      if(x){S.budgets.forEach(function(b){if(b.projectId===x.id){own[b.month]=(own[b.month]||0)+(Number(b.total)||0);ot+=Number(b.total)||0}});S.expenditures.forEach(function(e){if(e.projectId===x.id)os+=Number(e.amount)||0})}
+      var npk=npc||(x&&noPlanOf(x)),ks=npk?((x&&os>aa+.005)?'<span class="pill bad">核銷超過登記額</span>':'<span class="pill info">該案無須計畫書</span>'):!x?'<span class="pill wait">尚未綁定方案</span>':os>aa+.005?'<span class="pill bad">核銷超過登記額</span>':ot>aa+.005?'<span class="pill bad">計畫書超過登記額</span>':'<span class="pill run">正常</span>';
+      srows.push('<tr style="background:rgba(127,127,127,.07)"><td></td><td>└ '+esc(k.name||'(未填名稱)')+(TEAMV?'<br><small>'+(k.sl&&k.sl.chain&&k.sl.chain.some(function(a){return a.name})?'承辦:'+k.sl.chain.map(function(a){return esc(a.name||'?')+(a.left?'<span class="rem">(離職/已交接)</span>':'')}).join(' → '):x?'承辦:'+esc(supOwner(x)):'<span class="pill wait">未派發</span>')+'</small>':'')+(k.est?' <span class="pill wait">暫平分</span>':'')+'</td><td><small class="rem">'+esc(k.note||'')+'</small></td><td class="n">'+money(aa)+'</td><td class="n">'+(x?money(Math.round(ot*100)/100):'—')+'</td><td class="n">'+(x?money(Math.round((aa-ot)*100)/100):'—')+'</td><td class="n">'+(x?money(Math.round(os*100)/100):'—')+'</td><td class="n">'+(x?pct(os,aa)+'%':'—')+'</td>'+MONTHS.map(function(m){var v=k.vals?(k.vals[m]||0):0,p=own[m]||0;return'<td class="n'+(v||p?'':' z')+(k.vals&&p>v+.005?' over':'')+'">'+(k.vals?(v?'<b>'+money(v)+'</b>':'—')+(p?'<br><small>計 '+money(Math.round(p*100)/100)+'</small>':''):(p?'<small>計</small> '+money(Math.round(p*100)/100):'—'))+'</td>'}).join('')+'<td>'+ks+'</td><td class="act">'+(TEAMV&&canWrite&&al>0?'<button class="btn sm" data-a="poaHandover" data-code="'+esc(code)+'" data-slot="'+(k.si>=0?k.si:sls.length)+'"'+(k.item>=0?' data-item="'+k.item+'"':'')+'>'+(k.sl&&k.sl.chain&&k.sl.chain.length?'交接/換人':'派發')+'</button> ':'')+(x?openBtn(x):'')+'</td></tr>')})});
   var head='<th>方案</th>'+MONTHS.map(function(m){return'<th class="n">'+m+'</th>'}).join('')+'<th class="n">全年</th>';
   var colT=MONTHS.map(function(){return 0}),gt=0;
   var rows=codes.map(function(code){var rt=0;
@@ -1211,23 +1329,31 @@ function poaView(){
   var foot='<tr><td>合計</td>'+colT.map(function(v){return'<td class="n">'+mm(Math.round(v*100)/100)+'</td>'}).join('')+'<td class="n">'+money(Math.round(gt*100)/100)+'</td></tr>';
   var seg='<div class="seg" role="group" aria-label="檢視內容">'+Object.keys(PM).map(function(k){return'<button data-a="poametric" data-v="'+k+'" aria-pressed="'+(metric===k)+'">'+PM[k]+'</button>'}).join('')+'</div>';
   var note=metric==='alloc'?'顯示 v'+sel.ver+(prev?',小字是相較 v'+prev.ver+' 的增減':'')+'。':'以生效版本 v'+latest.ver+' 為基準比較,紅色代表超過登記額。';
-  return h+'<div class="lay2"><div><h3 style="margin-bottom:.5rem">版本歷程(共 '+vs.length+' 版)</h3><div class="vers">'+vl+'</div></div><div>'
-    +sec('各方案登記狀況(生效版本 v'+latest.ver+')','',table(['事工編碼','方案名稱','#POA 登記額','#計畫書經費','#登記額−計畫書','#已核銷','#執行率','狀態',''],srows,'<tr><td colspan="2">合計</td><td class="n">'+money(lt)+'</td><td class="n">'+money(planT)+'</td><td class="n">'+money(Math.round((lt-planT)*100)/100)+'</td><td class="n">'+money(spentT)+'</td><td class="n">'+pct(spentT,lt)+'%</td><td colspan="2"></td></tr>','尚無登記'),1)
+  return h+'<div><div><h3 style="margin-bottom:.5rem">版本歷程(共 '+vs.length+' 版)</h3><div class="vers versh">'+vl+'</div></div><div style="margin-top:1rem">'
+    +sec('各方案登記狀況(生效版本 v'+latest.ver+')','',table(['事工編碼','方案名稱','備註','#POA 登記額','#計畫書經費','#登記額−計畫書','#已核銷','#執行率'].concat(MONTHS.map(function(m){return'#'+m+' 登記/計畫'}),['狀態','']),srows,'<tr><td colspan="3">合計</td><td class="n">'+money(lt)+'</td><td class="n">'+money(planT)+'</td><td class="n">'+money(Math.round((lt-planT)*100)/100)+'</td><td class="n">'+money(spentT)+'</td><td class="n">'+pct(spentT,lt)+'%</td>'+mcol.map(function(v){return'<td class="n">'+mm(Math.round(v*100)/100)+'</td>'}).join('')+'<td colspan="2"></td></tr>','尚無登記'),1)
     +sec('年度配置表(方案 × 月份)',seg,(sel.reason&&sel.ver?'<p class="hint" style="padding:.1rem .9rem .5rem">v'+sel.ver+' 異動原因:'+esc(sel.reason)+'</p>':'')+(codes.length?'<div class="tw"><table class="mx"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody><tfoot>'+foot+'</tfoot></table></div>':'<p class="hint" style="padding:.8rem .9rem">尚無登記資料</p>')+'<p class="hint" style="padding:.5rem .9rem">'+note+'方案以事工編碼辨識,月份對應預算項目的月份;統計範圍是執行中心「'+esc(plan.center)+'」的所有方案。</p>',1)
     +'</div></div>';
 }
-function poaBindOpts(sel){var o='<option value="">(未綁定:依事工編碼比對)</option>';var ps=[];S.projects.forEach(function(p){if(!window.__poaCenter||p.center===window.__poaCenter)ps.push(p)});ps.sort(function(a,b){return String(a.code).localeCompare(String(b.code))});ps.forEach(function(p){o+='<option value="'+esc(p.id)+'"'+(p.id===sel?' selected':'')+'>'+esc('綁定:'+p.name+'('+(p.code||'無編碼')+')')+'</option>'});return o}
-function poaRow(code,name,vals,bind){if(bind===undefined){var ap=code?projByCode(code,window.__poaCenter):null;bind=ap?ap.id:''}return'<tr data-row><td><input type="text" class="pc" list="dl_poacode" placeholder="事工編碼" value="'+esc(code)+'" aria-label="事工編碼"><input type="text" class="pnm" placeholder="方案名稱" value="'+esc(name)+'" aria-label="方案名稱" style="margin-top:.2rem"><select class="pbind" aria-label="綁定我的方案" style="margin-top:.2rem;width:100%">'+poaBindOpts(bind)+'</select></td>'+MONTHS.map(function(m){var v=vals[m];return'<td><input type="number" class="pn" min="0" step="any" inputmode="decimal" data-m="'+m+'" value="'+(v?v:'')+'" aria-label="'+esc(m)+'"></td>'}).join('')+'<td class="n rt">0</td><td><button type="button" class="btn sm" data-a="poaDelRow" aria-label="刪除此列">×</button></td></tr>'}
+function poaBindOpts(sel,uid){var o='<option value="">(未綁定:依事工編碼比對)</option>';var ps=[];S.projects.forEach(function(p){if(window.__poaCenter&&p.center!==window.__poaCenter)return;if(uid&&p.owner!==uid)return;ps.push(p)});ps.sort(function(a,b){return String(a.code).localeCompare(String(b.code))});ps.forEach(function(p){o+='<option value="'+esc(p.id)+'"'+(p.id===sel?' selected':'')+'>'+esc('綁定:'+p.name+'('+(p.code||'無編碼')+')'+(uid?'':' ・'+supOwner(p)))+'</option>'});return o}
+function poaSlotHtml(sl,i){
+  var ch=sl.chain||[],cu=ch.length?ch[ch.length-1]:null,au=cu?cu.uid:'',bind=sl.bind||'',pj=bind&&S.projects.get(bind);
+  if(!au&&pj&&pj.owner&&TM.users[pj.owner])au=pj.owner;
+  return'<div class="slot" data-chain="'+esc(JSON.stringify(ch))+'" style="margin-top:.25rem;padding:.25rem;border:1px dashed var(--line);border-radius:6px"><div class="rem slb" style="font-size:.75rem">方案 '+(i+1)+' <button type="button" class="btn sm" data-a="poaDelSlot" aria-label="移除此方案" style="margin-left:.3rem;padding:0 .35rem">×</button></div>'
+   +'<select class="pasg" aria-label="承辦社工" style="width:100%">'+poaUserOpts(au,'(未派發)',cu)+'</select><select class="pbind" aria-label="綁定方案" style="margin-top:.2rem;width:100%">'+poaBindOpts(bind,au)+'</select>'
+   +'<input type="number" class="pamt" min="0" step="any" inputmode="decimal" placeholder="此方案 POA 分配額(全年,元)" aria-label="此方案 POA 分配額" value="'+(sl.amt!==undefined&&sl.amt!==''&&sl.amt!==null?esc(sl.amt):'')+'" style="margin-top:.2rem;width:100%">'
+   +(ch.length>1?'<div class="rem" style="font-size:.75rem">交接紀錄:'+esc(ch.slice(0,-1).map(function(a){return a.name}).join('、'))+'(已保留)</div>':'')+'</div>'}
+function poaRow(code,name,vals,slots,ex){ex=ex||{};if(!slots){var ap=code?projByCode(code,window.__poaCenter):null;slots=[{chain:[],bind:ap?ap.id:''}]}
+  return'<tr data-row><td><input type="text" class="pc" list="dl_poacode" placeholder="事工編碼" value="'+esc(code)+'" aria-label="事工編碼"><input type="text" class="pnm" placeholder="方案名稱" value="'+esc(name)+'" aria-label="方案名稱" style="margin-top:.2rem"><div class="slots">'+slots.map(poaSlotHtml).join('')+'</div><div class="rem slchk" style="font-size:.75rem;margin-top:.2rem"></div><button type="button" class="btn sm" data-a="poaAddSlot" style="margin-top:.25rem">＋ 同編碼再加一個方案</button></td>'+MONTHS.map(function(m){var v=vals[m];return'<td><input type="number" class="pn" min="0" step="any" inputmode="decimal" data-m="'+m+'" value="'+(v?v:'')+'" aria-label="'+esc(m)+'"></td>'}).join('')+'<td class="n rt">0</td><td><input type="text" class="pnote" aria-label="備註" value="'+esc(ex.note||'')+'" style="min-width:7rem"></td><td><button type="button" class="btn sm" data-a="poaDelRow" aria-label="刪除此列">×</button></td></tr>'}
 function xferOf(v){var x=(v&&v.xfer)||{};return{out:Number(x.out)||0,outTo:x.outTo||'',inn:Number(x['in'])||0,inFrom:x.inFrom||'',note:x.note||''}}
 function poaBase(plan,v){var x=xferOf(v);return Math.round(((Number(plan.total)||0)+x.inn-x.out)*100)/100}
 function xferText(v){var x=xferOf(v),a=[];if(x.out)a.push('累計轉出 $'+money(x.out)+(x.outTo?'(給 '+x.outTo+')':''));if(x.inn)a.push('累計轉入 $'+money(x.inn)+(x.inFrom?'(自 '+x.inFrom+')':''));return a.join(';')}
-function xferFields(v){var x=xferOf(v);return'<div class="note info" style="margin:0"><b>方案費用轉給其他社工(或由他人轉入)時,請填這裡。</b>填的是<b>截至此版本的累計金額</b>。調整後的年度基準 = 原始 POA − 轉出 + 轉入,全年登記合計必須等於這個基準;本人的 POA 仍然只登記自己的方案。</div>'
- +'<div class="two"><div class="fld"><label for="xout">轉出金額(累計,元)</label><input type="number" id="xout" min="0" step="any" value="'+(x.out||'')+'"></div><div class="fld"><label for="xoutto">轉給誰(社工姓名)</label><input type="text" id="xoutto" value="'+esc(x.outTo)+'"></div></div>'
- +'<div class="two"><div class="fld"><label for="xin">轉入金額(累計,元)</label><input type="number" id="xin" min="0" step="any" value="'+(x.inn||'')+'"></div><div class="fld"><label for="xinfrom">由誰轉入(社工姓名)</label><input type="text" id="xinfrom" value="'+esc(x.inFrom)+'"></div></div>'}
 function poaTarget(){var t=document.getElementById('pt'),b=t?Number(t.value)||0:(window.__poaTarget||0),o=document.getElementById('xout'),i=document.getElementById('xin');if(o||i)b+=(Number(i&&i.value)||0)-(Number(o&&o.value)||0);return Math.round(b*100)/100}
 function poaRecalc(){
   var tr=document.querySelectorAll('#pg tbody tr'),colT=MONTHS.map(function(){return 0}),gt=0;
-  tr.forEach(function(r){var t=0;r.querySelectorAll('.pn').forEach(function(i,ix){var v=Number(i.value)||0;t+=v;colT[ix]+=v});r.querySelector('.rt').textContent=money(Math.round(t*100)/100);gt+=t});
+  tr.forEach(function(r){var t=0;r.querySelectorAll('.pn').forEach(function(i,ix){var v=Number(i.value)||0;t+=v;colT[ix]+=v});r.querySelector('.rt').textContent=money(Math.round(t*100)/100);gt+=t;
+    var sc=r.querySelector('.slchk'),pa=r.querySelectorAll('.pamt');
+    if(sc){if(pa.length>1){var sa=0,cn=0;pa.forEach(function(i){var v=Number(i.value)||0;if(v>0)cn++;sa+=v});sa=Math.round(sa*100)/100;var rr=Math.round((t-sa)*100)/100;
+      sc.style.color=rr<-0.005?'var(--bad,#c0392b)':'';sc.textContent=sa<=0?'同編碼有 '+pa.length+' 個方案:請填各方案分配額(全年);未填的會平分剩餘金額。':rr<-0.005?'✘ 各方案分配額合計 $'+money(sa)+',超過本編碼全年 $'+money(Math.round(t*100)/100)+'。':'各方案分配額合計 $'+money(sa)+(rr>0.005?',尚有 $'+money(rr)+(cn<pa.length?' 由未填的方案平分':' 未分配'):',已全數分配')+'。'}else sc.textContent=''}});
   document.querySelectorAll('#pg tfoot .ct').forEach(function(td,i){td.textContent=money(Math.round(colT[i]*100)/100)});
   var g=document.getElementById('pgt');if(g)g.textContent=money(Math.round(gt*100)/100);
   var tgt=poaTarget(),diff=Math.round((gt-tgt)*100)/100,el=document.getElementById('pchk');
@@ -1240,73 +1366,126 @@ function openPoaEditor(mode,plan){
   window.__poaCenter=center;var bnd=(base&&base.binds)||{};var st=poaStats(center),codes=codesOfMaps(bm);
   S.projects.forEach(function(x){if(x.center===center&&x.code&&codes.indexOf(x.code)<0)codes.push(x.code)});
   codes=codes.sort();
-  var rows=codes.map(function(cd){var v={};MONTHS.forEach(function(m){v[m]=bm[cd+SEP+m]});
+  var rows=codes.map(function(cd){var its=(base&&base.items||[]).filter(function(i){return i.c===cd});
+    if(its.length){var all=asgSlots(base,cd),used={};its.forEach(function(it){(it.slotIdx||[]).forEach(function(i){used[i]=1})});var left=[];all.forEach(function(x,i){if(!used[i])left.push(i)});
+      return its.map(function(it,k){var vv={};MONTHS.forEach(function(m){vv[m]=it.vals&&it.vals[m]});var idx=(it.slotIdx||[]).slice();if(k===its.length-1)idx=idx.concat(left);var sl2=idx.map(function(i){return all[i]}).filter(Boolean);
+        return poaRow(cd,it.name||'',vv,sl2.length?sl2:[{chain:[],bind:'',amt:''}],{note:it.note||''})}).join('')}
+    var v={};MONTHS.forEach(function(m){v[m]=bm[cd+SEP+m]});
     if(mode==='new'){var pr=projByCode(cd,center);if(pr&&Number(pr.poa)>0)v[pr.month]=Number(pr.poa)}
-    return poaRow(cd,codeName(cd,base),v,bnd[cd]||undefined)}).join('');
+    var sl=asgSlots(base,cd);if(!sl.length){S.projects.forEach(function(x){if(x.center===center&&x.code===cd&&sl.length<3)sl.push({chain:[],bind:x.id})})}
+    return poaRow(cd,codeName(cd,base),v,sl.length?sl:undefined,{note:(base&&base.notes&&base.notes[cd])||''})}).join('');
   if(mode==='new'||!codes.length)rows+=poaRow('','',{});
   var title=mode==='new'?'建立年度 POA(原始版本)':mode==='edit0'?'修改目前版本(新增/調整)':'新增經費異動版本(整年度重新登記)';
   var top='';
   if(mode==='new')top='<div class="two"><div class="fld"><label for="pcen">執行中心 <i>*</i></label><input type="text" id="pcen" list="dl_pcen" value="'+esc(center)+'"><datalist id="dl_pcen">'+Object.keys(centers).map(function(c){return'<option value="'+esc(c)+'">'}).join('')+'</datalist></div><div class="fld"><label for="pfy">年度</label><input type="text" id="pfy" value="'+curFY()+'"><div class="help">10月至隔年9月</div></div></div>';
   if(mode==='edit0'&&plan)top+='<div class="note info">直接在目前生效版本 v'+latest.ver+' 上新增方案列或調整金額,<b>不會產生新版本</b>,也不用重新登打。若這是正式的經費異動、需要留下紀錄,請改用「新增經費異動版本」。</div>';
-  var showX=mode==='memo'||(mode==='edit0'&&plan&&latest&&latest.ver>0);
-  if(mode!=='memo')top+='<div class="fld"><label for="pt">原始 POA 年度總額(元) <i>*</i></label><input type="number" id="pt" min="0" step="any" value="'+(plan?plan.total:'')+'"><div class="help">這是原始核定的數字;若之後有方案費用轉給其他社工,不要改這裡,請在異動版本填「轉出/轉入」。</div></div>'+(showX?xferFields(latest):'');
-  else top='<div class="note info">原始 POA 年度總額 <b>$'+money(plan.total)+'</b>。新版本是整年度的重新登記,全年合計必須剛好等於「原始 POA − 轉出 + 轉入」;已核銷的方案/月份,登記額不可低於已核銷金額。</div>'+xferFields(latest)+'<div class="two"><div class="fld"><label for="pdate">異動日期</label><input type="date" id="pdate" value="'+today()+'"></div><div class="fld"><label for="pappr">核定者</label><input type="text" id="pappr"></div></div><div class="fld"><label for="preason">異動原因 <i>*</i></label><textarea id="preason"></textarea></div>';
+  var showX=false;
+  if(mode!=='memo')top+='<div class="fld"><label for="pt">原始 POA 年度總額(元) <i>*</i></label><input type="number" id="pt" min="0" step="any" value="'+(plan?plan.total:'')+'"><div class="help">原始核定的中心年度總額。方案費用在社工之間轉移不影響總額,只要在「登記狀況」用「交接/換人」調整承辦即可。</div></div>';
+  else top='<div class="note info">原始 POA 年度總額 <b>$'+money(plan.total)+'</b>。新版本是整年度的重新登記,全年合計必須剛好等於這個數字;已核銷的方案/月份,登記額不可低於已核銷金額。</div>'+'<div class="two"><div class="fld"><label for="pdate">異動日期</label><input type="date" id="pdate" value="'+today()+'"></div><div class="fld"><label for="pappr">核定者</label><input type="text" id="pappr"></div></div><div class="fld"><label for="preason">異動原因 <i>*</i></label><textarea id="preason"></textarea></div>';
   var el=document.getElementById('layer');window.__poaTarget=plan?plan.total:0;
   var cl=[];S.projects.forEach(function(x){if(x.code)cl.push(x)});
   el.innerHTML='<div class="ov"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="mt"><header id="mt">'+title+(plan?'('+esc(plan.center)+' '+esc(plan.fy)+')':'')+'</header><div style="padding:1rem 1.1rem;display:grid;gap:.8rem">'+top
-   +'<div class="actions"><button type="button" class="btn sm" data-a="poaTpl">下載匯入範本(.xlsx)</button><label class="btn sm" style="cursor:pointer">匯入 Excel<input type="file" accept=".xlsx,.xlsm" data-poafile hidden></label><span class="rem">依事工編碼帶入或更新各列金額,帶入後仍可手動調整</span></div><div id="poaimp"></div>'
-   +'<div class="tw"><table class="pg" id="pg"><thead><tr><th>方案(事工編碼/名稱)</th>'+MONTHS.map(function(m){return'<th class="n">'+m+'</th>'}).join('')+'<th class="n">全年</th><th></th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td><button type="button" class="btn sm" data-a="poaAddRow">＋ 新增方案列</button></td>'+MONTHS.map(function(){return'<td class="n ct">0</td>'}).join('')+'<td class="n" id="pgt">0</td><td></td></tr></tfoot></table></div>'
+   +'<div class="actions"><button type="button" class="btn sm" data-a="poaTpl">下載匯入範本(.xlsx)</button><label class="btn sm" style="cursor:pointer">匯入 Excel<input type="file" accept=".xlsx,.xlsm" data-poafile hidden></label><span class="rem">依事工編碼帶入或更新各列金額,帶入後仍可手動調整</span></div><label class="rem" style="display:flex;gap:.4rem;align-items:flex-start;margin:.3rem 0"><input type="checkbox" id="poaLenient" checked style="margin-top:.2rem"><span><b>忽略錯誤、盡量匯入</b>:找不到頁籤/表頭/月份欄時改依欄位順序(事工編碼、方案名稱、10月~9月、備註)讀取;金額格式不標準(含「元」「NT$」等文字)時自動去除「元」「NT$」等符號;無法判讀的格子略過而不中斷;全部讀不到也不會報錯,只會提醒。取消勾選則嚴格檢查,有錯就停止匯入。</span></label><div id="poaimp"></div>'
+   +'<div class="tw"><table class="pg" id="pg"><thead><tr><th>方案(事工編碼/名稱/承辦/綁定)</th>'+MONTHS.map(function(m){return'<th class="n">'+m+'</th>'}).join('')+'<th class="n">全年</th><th>備註</th><th></th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td><button type="button" class="btn sm" data-a="poaAddRow">＋ 新增方案列</button></td>'+MONTHS.map(function(){return'<td class="n ct">0</td>'}).join('')+'<td class="n" id="pgt">0</td><td></td><td></td></tr></tfoot></table></div>'
    +'<datalist id="dl_poacode">'+cl.map(function(x){return'<option value="'+esc(x.code)+'">'+esc(x.name)+'</option>'}).join('')+'</datalist>'
    +'<div id="pchk" class="chk bad" role="status"></div><div class="err" id="perr" role="alert"></div>'
    +'<div class="foot"><button type="button" class="btn" data-a="mclose">取消</button><button type="button" class="btn pri" data-a="poaSave" id="poasave">儲存'+(mode==='memo'?'為新版本':'')+'</button></div></div></div></div>';
   modalOpen=true;window.__poa={mode:mode,plan:plan};
-  el.oninput=function(e){var t=e.target;if(t&&t.classList&&t.classList.contains('pc')){var pr=projByCode(t.value.trim(),window.__poaCenter);var nm=t.parentElement.querySelector('.pnm'),bs=t.parentElement.querySelector('.pbind');if(pr&&nm&&!nm.value)nm.value=pr.name;if(pr&&bs&&!bs.value)bs.value=pr.id}
-    if(t&&t.classList&&t.classList.contains('pbind')){var pj=S.projects.get(t.value),td=t.parentElement,pc=td.querySelector('.pc'),pn=td.querySelector('.pnm');if(pj){if(!pc.value.trim())pc.value=pj.code||'';if(!pn.value.trim())pn.value=pj.name||''}}
-    poaRecalc()};poaRecalc();
+  el.oninput=function(e){var t=e.target;inSup(function(){
+    if(!t||!t.classList)return;
+    var cell=t.closest('td'),sl=t.closest('.slot');
+    var rf=function(sl,sel){var as=sl.querySelector('.pasg'),bs=sl.querySelector('.pbind');bs.innerHTML=poaBindOpts(sel||'',as.value);bs.value=sel&&bs.querySelector('option[value="'+sel+'"]')?sel:''};
+    if(t.classList.contains('pc')){var pr=projByCode(t.value.trim(),window.__poaCenter),nm=cell.querySelector('.pnm'),s0=cell.querySelector('.slot');if(pr&&nm&&!nm.value)nm.value=pr.name;if(pr&&s0){var as=s0.querySelector('.pasg'),bs=s0.querySelector('.pbind');if(!as.value&&pr.owner&&TM.users[pr.owner]){as.value=pr.owner;rf(s0,pr.id)}else if(!bs.value)bs.value=pr.id}}
+    if(sl&&t.classList.contains('pasg')){var code=cell.querySelector('.pc').value.trim(),m=null;if(t.value)S.projects.forEach(function(x){if(x.owner===t.value&&x.center===window.__poaCenter&&code&&x.code===code&&!m)m=x});rf(sl,m?m.id:'')}
+    if(sl&&t.classList.contains('pbind')){var pj=S.projects.get(t.value),pc=cell.querySelector('.pc'),pn=cell.querySelector('.pnm'),as2=sl.querySelector('.pasg');if(pj){if(!pc.value.trim())pc.value=pj.code||'';if(!pn.value.trim())pn.value=pj.name||'';if(!as2.value&&pj.owner&&TM.users[pj.owner])as2.value=pj.owner}}
+    poaRecalc()})};poaRecalc();
 }
 function poaTemplateSheets(){
-  var hd=['事工編碼*','方案名稱'].concat(MONTHS),r1=['FY27-001','週末籃球營'],r2=['FY27-002','社區烘焙班'];MONTHS.forEach(function(m,i){r1.push(m==='11月'||m==='12月'?12000:'');r2.push(m==='11月'?8000:'')});
-  return[{name:'說明',noHead:1,wrap:1,widths:[110],rows:[['年度 POA 匯入:在「年度POA」頁籤,每一列是一個方案,每個月份欄填該方案該月的 POA 金額(元)。'],['事工編碼必填;方案名稱選填。月份欄請勿改名(10月~9月),沒有金額的月份留空。'],['範例列請先刪除或改成你的資料。匯入後會帶入「年度 POA」編輯畫面,可再手動調整,全年合計必須等於原始 POA 年度總額才能儲存。'],['相同事工編碼的列會被更新,不同的會新增為新的方案列。']]},
-    {name:'年度POA',widths:[16,24].concat(MONTHS.map(function(){return 10})),rows:[hd,r1,r2]}]}
-function poaParse(sheets){
+  var hd=['事工編碼*','方案名稱'].concat(MONTHS,['備註']),r1=['FY27-001','週末籃球營'],r2=['FY27-002','社區烘焙班'];MONTHS.forEach(function(m,i){r1.push(m==='11月'||m==='12月'?12000:'');r2.push(m==='11月'?8000:'')});r1.push('範例備註');r2.push('');
+  return[{name:'說明',noHead:1,wrap:1,widths:[110],rows:[['年度 POA 匯入(督導系統 → 年度 POA):「年度POA」頁籤的欄位為 事工編碼*／方案名稱／10月~9月／備註。每一列是一個方案,每個月份欄填該方案該月的 POA 金額(元)。'],['事工編碼必填;方案名稱、備註選填。月份欄請勿改名(10月~9月),沒有金額的月份留空。承辦社工的派發與方案綁定,匯入後在系統內用選單設定,不用寫在 Excel。'],['範例列請先刪除或改成你的資料。匯入後會帶入「年度 POA」編輯畫面,可再手動調整,全年合計必須等於原始 POA 年度總額才能儲存。'],['相同事工編碼的列會被更新,不同的會新增為新的方案列。']]},
+    {name:'年度POA',widths:[16,24].concat(MONTHS.map(function(){return 10}),[24]),rows:[hd,r1,r2]}]}
+function poaParse(sheets,lenient){
   var sh=sheets.filter(function(x){return['年度POA','年度 POA','POA'].indexOf(String(x.name).trim())>=0})[0]||sheets.filter(function(x){return x.name!=='說明'})[0];
-  if(!sh)return{err:'找不到「年度POA」頁籤。'};
-  var rows=sh.rows,hi=-1,ci=-1,ni=-1,mi={};
-  for(var i=0;i<rows.length&&hi<0;i++){var hd=rows[i].map(cleanLabel);var k=hd.indexOf('事工編碼');if(k<0)k=hd.indexOf('事工編號');if(k>=0){hi=i;ci=k;ni=hd.indexOf('方案名稱');hd.forEach(function(h,j){if(/^\d{1,2}$/.test(h))h+='月';if(MONTHS.indexOf(h)>=0)mi[h]=j})}}
-  if(hi<0)return{err:'找不到表頭「事工編碼」,請使用範本。'};
-  if(!Object.keys(mi).length)return{err:'找不到月份欄(10月~9月),請使用範本。'};
-  var items=[],warns=[],seen={};
-  rows.slice(hi+1).forEach(function(r,n){var code=String(r[ci]==null?'':r[ci]).trim();if(!code||/^(合計|總計)$/.test(code))return;
-    var vals={},bad=null;MONTHS.forEach(function(m){if(mi[m]==null)return;var raw=String(r[mi[m]]==null?'':r[mi[m]]).replace(/[,\s$]/g,'');if(raw==='')return;var v=Number(raw);if(isNaN(v)||v<0){bad=m;return}vals[m]=v});
-    if(bad){warns.push('第 '+(hi+n+2)+' 列「'+code+'」的'+bad+'金額不是 0 以上的數字,該月略過');}
-    if(seen[code])warns.push('事工編碼「'+code+'」出現多次,以最後一列為準');seen[code]=1;
-    items=items.filter(function(x){return x.code!==code});items.push({code:code,name:ni>=0?String(r[ni]==null?'':r[ni]).trim():'',vals:vals})});
-  if(!items.length)return{err:'沒有可匯入的資料列。'};
+  if(!sh&&lenient)sh=sheets[0];
+  if(!sh)return lenient?{items:[],warns:['檔案內沒有任何頁籤,未帶入資料。']}:{err:'找不到「年度POA」頁籤。'};
+  var rows=sh.rows||[],hi=-1,ci=-1,ni=-1,nt=-1,mi={},warns=[],pos=false;
+  for(var i=0;i<rows.length&&hi<0;i++){var hd=(rows[i]||[]).map(cleanLabel);var k=hd.indexOf('事工編碼');if(k<0)k=hd.indexOf('事工編號');if(k>=0){hi=i;ci=k;ni=hd.indexOf('方案名稱');nt=hd.indexOf('備註');hd.forEach(function(h,j){if(/^\d{1,2}$/.test(h))h+='月';if(MONTHS.indexOf(h)>=0)mi[h]=j})}}
+  if(hi<0){
+    if(!lenient)return{err:'找不到表頭「事工編碼」,請使用範本。'};
+    pos=true;hi=-1;ci=0;ni=1;nt=2+MONTHS.length;warns.push('找不到表頭「事工編碼」,已改依欄位順序讀取(第1欄事工編碼、第2欄方案名稱、第3~14欄 10月~9月、第15欄備註),請確認金額是否對應正確。')}
+  if(!Object.keys(mi).length){
+    if(!lenient)return{err:'找不到月份欄(10月~9月),請使用範本。'};
+    var st=Math.max(ci,ni)+1;MONTHS.forEach(function(m,j){mi[m]=st+j});if(!pos)warns.push('找不到月份欄(10月~9月),已從表頭右側依序當作 10月~9月 讀取,請確認。')}
+  var items=[];
+  rows.slice(hi+1).forEach(function(r,n){r=r||[];var code=String(r[ci]==null?'':r[ci]).trim();if(!code||/^(合計|總計)$/.test(code))return;
+    var vals={},bad=null,got=0;MONTHS.forEach(function(m){if(mi[m]==null)return;var cell=String(r[mi[m]]==null?'':r[mi[m]]),raw=cell.replace(/[,\s$]/g,'');if(raw==='')return;var v=Number(raw);
+      if((isNaN(v)||v<0)&&lenient){v=Number(cell.replace(/NT\$|NTD|TWD|元|圓|＄|\$|,|，|\s/gi,''))}
+      if(isNaN(v)||v<0){bad=m;return}vals[m]=v;if(v>0)got++});
+    if(lenient&&pos&&!got)return;
+    if(bad)warns.push('第 '+(hi+n+2)+' 列「'+code+'」的'+bad+'金額無法判讀,該月略過');
+    var nm0=ni>=0?String(r[ni]==null?'':r[ni]).trim():'',nt0=nt>=0?String(r[nt]==null?'':r[nt]).trim():'',tot0=0;Object.keys(vals).forEach(function(m){tot0+=vals[m]});tot0=Math.round(tot0*100)/100;
+    items.push({code:code,name:nm0,note:nt0,vals:vals,total:tot0,row:hi+n+2})});
+  var cc={};items.forEach(function(x){cc[x.code]=(cc[x.code]||0)+1});
+  Object.keys(cc).forEach(function(k){if(cc[k]>1)warns.push('事工編碼「'+k+'」共 '+cc[k]+' 列,每一列都會各自匯入,並歸在同一個事工編碼下')});
+  if(!items.length){if(lenient){warns.push('沒有讀到可匯入的資料列,未帶入任何方案。');return{items:items,warns:warns}}return{err:'沒有可匯入的資料列。'}}
   return{items:items,warns:warns}}
 async function poaFile(f){
   var box=document.getElementById('poaimp');if(!box)return;
   if(!/\.xls[xm]$/i.test(f.name)){box.innerHTML='<div class="note bad">請選擇 .xlsx 檔。</div>';return}
   var sheets;try{sheets=await readXlsx(await f.arrayBuffer())}catch(e){box.innerHTML='<div class="note bad">無法讀取這個檔案:'+esc(e&&e.message||e)+'</div>';return}
-  var r=poaParse(sheets);if(r.err){box.innerHTML='<div class="note bad">'+esc(r.err)+'</div>';return}
+  var lk=document.getElementById('poaLenient'),len=!!(lk&&lk.checked),r;
+  try{r=poaParse(sheets,len)}catch(e){if(!len){box.innerHTML='<div class="note bad">匯入失敗:'+esc(e&&e.message||e)+'</div>';return}r={items:[],warns:['檔案內容無法判讀('+(e&&e.message||e)+'),未帶入資料。']}}
+  if(r.err){box.innerHTML='<div class="note bad">'+esc(r.err)+(lk?'(可勾選「忽略錯誤、盡量匯入」再試一次)':'')+'</div>';return}
+  inSup(function(){
   var tb=document.querySelector('#pg tbody'),upd=0,add=0;
   [].slice.call(tb.querySelectorAll('tr')).forEach(function(tr){var c=tr.querySelector('.pc').value.trim(),any=[].slice.call(tr.querySelectorAll('.pn')).some(function(i){return Number(i.value)>0});if(!c&&!any)tr.remove()});
-  r.items.forEach(function(it){var tr=[].slice.call(tb.querySelectorAll('tr')).filter(function(x){return x.querySelector('.pc').value.trim()===it.code})[0];
-    if(tr){upd++;tr.querySelectorAll('.pn').forEach(function(i){i.value=it.vals[i.dataset.m]||''});if(it.name)tr.querySelector('.pnm').value=it.name}
-    else{add++;tb.insertAdjacentHTML('beforeend',poaRow(it.code,it.name||(projByCode(it.code)||{}).name||'',it.vals))}});
+  var unm=[],imp={};r.items.forEach(function(it){imp[it.code]=1});
+  [].slice.call(tb.querySelectorAll('tr')).forEach(function(tr){var c=tr.querySelector('.pc').value.trim();if(imp[c]){tr.remove();if(imp[c]===1){imp[c]=2;upd++}}});
+  var usedP={};[].slice.call(tb.querySelectorAll('.pbind')).forEach(function(x){if(x.value)usedP[x.value]=1});
+  var perCode={};r.items.forEach(function(it){perCode[it.code]=(perCode[it.code]||0)+1});
+  r.items.forEach(function(it){var m=null,cand=[];S.projects.forEach(function(x){if(x.center===window.__poaCenter&&x.code===it.code&&!usedP[x.id])cand.push(x)});
+    cand.forEach(function(x){if(!m&&it.name&&String(x.name||'').trim()===it.name)m=x});
+    if(!m&&perCode[it.code]===1&&cand.length===1)m=cand[0];
+    if(m)usedP[m.id]=1;else if(perCode[it.code]>1)unm.push(it.code+' '+(it.name||'未填名稱'));
+    add++;tb.insertAdjacentHTML('beforeend',poaRow(it.code,it.name||'',it.vals,[{chain:[],bind:m?m.id:'',amt:''}],{note:it.note}))});
+  var trs=[].slice.call(tb.querySelectorAll('tr')).map(function(tr,i){return{tr:tr,c:tr.querySelector('.pc').value.trim(),i:i}});
+  trs.sort(function(a,b){if(!a.c!==!b.c)return a.c?-1:1;return a.c<b.c?-1:a.c>b.c?1:a.i-b.i});trs.forEach(function(x){tb.appendChild(x.tr)});
   var pt=document.getElementById('pt'),tot=0;r.items.forEach(function(it){Object.keys(it.vals).forEach(function(m){tot+=it.vals[m]})});
   if(pt&&!Number(pt.value)){var all=0;tb.querySelectorAll('.pn').forEach(function(i){all+=Number(i.value)||0});pt.value=Math.round(all*100)/100;window.__poaTarget=Number(pt.value)}
   poaRecalc();
-  box.innerHTML='<div class="note ok">已帶入 '+r.items.length+' 個方案(更新 '+upd+'、新增 '+add+'),請確認下方金額與合計後再按「儲存」。</div>'+(r.warns.length?'<div class="note warn">提醒:'+r.warns.map(esc).join('<br>')+'</div>':'')}
+  box.innerHTML='<div class="note ok">已帶入 '+r.items.length+' 筆資料(依事工編碼歸類;取代原有編碼 '+upd+' 個,新增 '+(add)+' 列),請確認下方金額與合計後再按「儲存」。</div>'+(unm.length?'<div class="note info">同編碼的下列列找不到名稱相同的方案:資料已各自匯入(金額與名稱都保留),但尚未綁定系統中的方案,請在該列的「方案」欄選擇綁定:'+esc(unm.join('、'))+'</div>':'')+(r.warns.length?'<div class="note warn">提醒:'+r.warns.map(esc).join('<br>')+'</div>':'')
+  })}
 async function poaSave(){
   var ctx=window.__poa,mode=ctx.mode,plan=ctx.plan,err=document.getElementById('perr');err.textContent='';
-  var lines=[],seen={},names={},binds={},bseen={},msg='';
+  var lines=[],names={},binds={},bseen={},notes={},slots={},more={},prior={},alloc={},items=[],cnt={},msg='';
+  document.querySelectorAll('#pg tbody tr').forEach(function(r){var c0=r.querySelector('.pc').value.trim();if(c0&&[].slice.call(r.querySelectorAll('.pn')).some(function(i){return Number(i.value)>0}))cnt[c0]=(cnt[c0]||0)+1});
   document.querySelectorAll('#pg tbody tr').forEach(function(r){
     var c=r.querySelector('.pc').value.trim(),nm=r.querySelector('.pnm').value.trim(),any=false,ls=[];
     r.querySelectorAll('.pn').forEach(function(i){var v=Math.round((Number(i.value)||0)*100)/100;if(v<0)msg='金額不可為負數。';if(v>0){any=true;ls.push({c:c,m:i.dataset.m,a:v})}});
     if(any&&!c){msg='有金額的列請填寫事工編碼。';return}
-    if(c&&any){if(seen[c]){msg='事工編碼「'+c+'」重複,請合併成一列。';return}seen[c]=1;if(nm)names[c]=nm;var bv=r.querySelector('.pbind').value;if(bv){if(bseen[bv]){var bp=S.projects.get(bv);msg='方案「'+(bp?bp.name:bv)+'」被綁定在兩列,請只綁定一列。';return}bseen[bv]=1;binds[c]=bv}lines=lines.concat(ls)}
+    if(c&&any){if(nm&&!names[c])names[c]=nm;var sls=[],al={},bvs=[];
+      r.querySelectorAll('.slot').forEach(function(sl){if(msg)return;var uv=sl.querySelector('.pasg').value,bv=sl.querySelector('.pbind').value,ch=[];try{ch=JSON.parse(sl.dataset.chain||'[]')}catch(x){ch=[]}
+        if(!uv&&bv){var pj0=S.projects.get(bv);if(pj0&&pj0.owner&&TM.users[pj0.owner])uv=pj0.owner}
+        if(bv){if(bseen[bv]){var bp=S.projects.get(bv);msg='方案「'+(bp?bp.name:bv)+'」被綁定在兩處,請只綁定一次。';return}bseen[bv]=1}
+        var pav=Math.round((Number(sl.querySelector('.pamt').value)||0)*100)/100;if(pav<0){msg='方案分配額不可為負數。';return}
+        if(bv)bvs.push(bv);if(pav>0){if(!bv){msg='「'+c+'」有填分配額的方案,請先綁定方案。';return}al[bv]=pav}
+        if(uv){var lu=ch.length?ch[ch.length-1]:null,uo=TM.users[uv],un=(uo&&uo.name)||(lu&&lu.uid===uv?lu.name:'');
+          if(lu&&lu.uid===uv)lu.pid=bv||'';else if(lu)ch[ch.length-1]={uid:uv,name:un,pid:bv||'',from:lu.from||''};else ch.push({uid:uv,name:un,pid:bv||'',from:''});sls.push(ch)}
+        else if(ch.length>1){msg='「'+c+'」已有交接紀錄,不能改回「未派發」。';return}
+        else if(bv)sls.push([{uid:'',name:'',pid:bv,from:''}])});
+      if(msg)return;
+      var alS=0;Object.keys(al).forEach(function(k){alS+=al[k]});var rowT=0;ls.forEach(function(x){rowT+=x.a});
+      if(alS>rowT+0.005){msg='「'+c+'」各方案分配額合計 $'+money(alS)+' 超過該編碼全年 POA $'+money(Math.round(rowT*100)/100)+'。';return}
+      if(cnt[c]>1&&bvs.length===1&&al[bvs[0]]==null)al[bvs[0]]=Math.round(rowT*100)/100;
+      if(Object.keys(al).length&&(sls.length>1||cnt[c]>1))alloc[c]=Object.assign(alloc[c]||{},al);
+      var nt=r.querySelector('.pnote').value.trim();if(nt)notes[c]=notes[c]&&notes[c]!==nt?notes[c]+'；'+nt:nt;
+      var b0=(slots[c]||[]).length,ix=[];sls.forEach(function(x,i){ix.push(b0+i)});
+      if(sls.length)slots[c]=(slots[c]||[]).concat(sls);
+      var vv={};ls.forEach(function(x){vv[x.m]=x.a});items.push({c:c,name:nm,note:nt,vals:vv,total:Math.round(rowT*100)/100,slotIdx:ix});
+      lines=lines.concat(ls)}
   });
   if(msg){err.textContent=msg;return}
+  Object.keys(slots).forEach(function(c){var sf=poaSlotFields(slots[c]);if(sf.bind)binds[c]=sf.bind;if(sf.more.length)more[c]=sf.more;if(sf.prior.length)prior[c]=sf.prior});
   var total=Math.round(sumMap(cellMap(lines))*100)/100,target,center,fy;
   if(mode==='memo'){target=plan.total;center=plan.center;fy=plan.fy}
   else{target=Number(document.getElementById('pt').value)||0;if(mode==='new'){center=document.getElementById('pcen').value.trim();fy=document.getElementById('pfy').value.trim()||curFY();if(!center){err.textContent='請填寫執行中心。';return}}else{center=plan.center;fy=plan.fy}}
@@ -1332,9 +1511,9 @@ async function poaSave(){
   }
   var btn=document.getElementById('poasave');btn.disabled=true;
   try{
-    if(mode==='new'){var id=await saveDoc('poaPlans',null,{center:center,fy:fy,total:target});await saveDoc('poaVersions',null,{planId:id,ver:0,type:'原始',date:date,lines:lines,names:names,binds:binds,total:total,reason:'原始 POA',by:uid,byName:myName()});V.planId=id}
-    else if(mode==='edit0'){await saveDoc('poaPlans',plan.id,{total:target});await saveDoc('poaVersions',versionsOf(plan.id).slice(-1)[0].id,Object.assign({lines:lines,names:names,binds:binds,total:total},xfer?{xfer:xfer}:{}))}
-    else{var vs=versionsOf(plan.id);await saveDoc('poaVersions',null,{planId:plan.id,ver:vs[vs.length-1].ver+1,type:'異動',date:date,lines:lines,names:names,binds:binds,total:total,reason:reason,approver:appr,xfer:xfer||null,by:uid,byName:myName()})}
+    if(mode==='new'){var id=await saveDoc('poaPlans',null,{center:center,fy:fy,total:target});await saveDoc('poaVersions',null,{planId:id,ver:0,type:'原始',date:date,lines:lines,names:names,binds:binds,notes:notes,slots:slots,more:more,prior:prior,alloc:alloc,items:items,total:total,reason:'原始 POA',by:uid,byName:myName()});V.planId=id}
+    else if(mode==='edit0'){await saveDoc('poaPlans',plan.id,{total:target});await saveDoc('poaVersions',versionsOf(plan.id).slice(-1)[0].id,Object.assign({lines:lines,names:names,binds:binds,notes:notes,slots:slots,more:more,prior:prior,alloc:alloc,items:items,total:total},xfer?{xfer:xfer}:{}))}
+    else{var vs=versionsOf(plan.id);await saveDoc('poaVersions',null,{planId:plan.id,ver:vs[vs.length-1].ver+1,type:'異動',date:date,lines:lines,names:names,binds:binds,notes:notes,slots:slots,more:more,prior:prior,alloc:alloc,items:items,total:total,reason:reason,approver:appr,xfer:xfer||null,by:uid,byName:myName()})}
     V.ver=null;V.tab='poa';closeModal();toast(mode==='memo'?'已建立新版本,即日起以新版本為準。請依最新 POA 調整各方案的預算':'已儲存');sched();
   }catch(e){btn.disabled=false}
 }
@@ -1380,9 +1559,9 @@ function conv(col,raw){
   return{v:raw};
 }
 var IMPX={
-  project:{check:function(d,ctx){var pe=projDateFix(d);if(pe)return pe;if(ctx.mode==='into'){var cp=S.projects.get(ctx.pid);if(d.code&&cp&&d.code!==cp.code)return'事工編碼「'+d.code+'」與本方案('+cp.code+')不同';return}if(Array.from(S.projects.values()).some(function(p){return p.code===d.code})||ctx.seen['c:'+d.code])return'事工編碼「'+d.code+'」已存在,請進入該方案後再匯入';ctx.seen['c:'+d.code]=1}},
+  project:{check:function(d,ctx){if(ctx.disp){d.fy=ctx.disp.fy||d.fy;d.center=ctx.disp.center||d.center;d.code=ctx.disp.code}var pe=projDateFix(d);if(pe)return pe;if(ctx.disp)return;if(ctx.mode==='into'){var cp=S.projects.get(ctx.pid);if(d.code&&cp&&d.code!==cp.code)return'事工編碼「'+d.code+'」與本方案('+cp.code+')不同';return}if(Array.from(S.projects.values()).some(function(p){return p.code===d.code})||ctx.seen['c:'+d.code])return'事工編碼「'+d.code+'」已存在,請進入該方案後再匯入';ctx.seen['c:'+d.code]=1}},
   audience:{check:function(d,ctx){if(kids('audiences',ctx.pid).some(function(a){return a.kind===d.kind})||ctx.seen['k:'+d.kind])return'「'+d.kind+'」已經有資料,請直接編輯';ctx.seen['k:'+d.kind]=1;if(d.expTimes==null)d.expTimes=d.expPeople||0}},
-  budget:{check:function(d){d.cat=catNorm(d.cat);d.total=Math.round((d.price||0)*(d.qty||0)*100)/100},warn:function(d){return!d.cat?'未填經費類別(仍會匯入,歸入「未分類」,請事後編輯)':catOk(d.cat)?'':'經費類別「'+d.cat+'」不在公司規定的 17 項內(仍會匯入,請事後編輯改選)'}},
+  budget:{check:function(d,ctx){d.cat=catNorm(d.cat);d.total=Math.round((d.price||0)*(d.qty||0)*100)/100;if(ctx.disp){if(!ctx.disp.noplan){ctx.bt=(ctx.bt||0)+d.total;if(ctx.bt>ctx.disp.amount+0.005)return'累計超過督導派發的 POA 額度 $'+money(ctx.disp.amount)}}else if(ctx.mode==='into'&&ctx.pid){var p=S.projects.get(ctx.pid),ep=effPoa(p);if(ep&&!noPlanOf(p)){if(ctx.bt==null)ctx.bt=sum(kids('budgets',ctx.pid),'total');ctx.bt+=d.total;if(ctx.bt>ep.amount+0.005)return'累計超過督導派發的 POA 額度 $'+money(ep.amount)}}},warn:function(d){return!d.cat?'未填經費類別(仍會匯入,歸入「未分類」,請事後編輯)':catOk(d.cat)?'':'經費類別「'+d.cat+'」不在公司規定的 17 項內(仍會匯入,請事後編輯改選)'}},
   event:{check:function(d,ctx){if(d.endDate&&d.endDate<d.date)return'結束日期不能早於開始日期';if(d.status!=='已辦理'&&d.status!=='取消')d.status='未辦理';if(!d.place){var p=S.projects.get(ctx.pid);d.place=(p&&p.place)||''}}},
   objective:{}, participant:{check:function(d,ctx){d.code=String(d.code).trim().toUpperCase();var k=d.code;if(kids('participants',ctx.pid).some(function(x){return String(x.code).toUpperCase()===k})||ctx.seen['p:'+k])return'編號「'+k+'」已在名冊中';ctx.seen['p:'+k]=1}}
 };
@@ -1486,7 +1665,7 @@ var BOOK=[
 function cleanLabel(h){return String(h==null?'':h).replace(/[（(][^）)]*[）)]/g,'').replace(/[*＊\s ]/g,'')}
 function nonEmptyRow(r){return r.some(function(c){return String(c==null?'':c).trim()!==''})}
 function analyzeRows(key,rows,ctx){
-  var sp=IMP[key],into=ctx.mode==='into'&&key==='project';rows=rows.filter(nonEmptyRow);
+  var sp=IMP[key],into=(ctx.mode==='into'||!!ctx.disp)&&key==='project';rows=rows.filter(nonEmptyRow);
   if(rows.length<2)return{rows:[],ignored:[],empty:true};
   var head=rows[0].map(cleanLabel),idx={},missing=[],ignored=[];
   sp.cols.forEach(function(c){var i=head.indexOf(cleanLabel(c.h));if(i<0)i=head.indexOf(c.k);if(i>=0)idx[c.k]=i;else if(c.req&&!into)missing.push(c.h)});
@@ -1500,8 +1679,8 @@ function analyzeRows(key,rows,ctx){
     out.push({n:n+2,d:d,err:errs.join(';'),warn:wn})});
   return{rows:out,ignored:ignored};
 }
-function bookAnalyze(sheets,mode){
-  var ctx={pid:mode==='into'?V.pid:null,mode:mode,seen:{}},parts=[];
+function bookAnalyze(sheets,mode,disp){
+  var ctx={pid:mode==='into'?V.pid:null,mode:mode,seen:{},disp:disp||null},parts=[];
   BOOK.forEach(function(b){
     var sh=sheets.filter(function(s){return b.names.indexOf(String(s.name).trim())>=0})[0];
     if(!sh){parts.push({b:b,missing:true,rows:[]});return}
@@ -1541,7 +1720,7 @@ async function bookFile(f){
   var er=document.getElementById('imperr'),pv=document.getElementById('impprev'),go=document.getElementById('impgo'),mode=window.__imp.mode;er.textContent='';go.disabled=true;pv.innerHTML='';
   if(!/\.xlsx?m?$/i.test(f.name)||/\.xls$/i.test(f.name)){er.textContent='請選擇 .xlsx 檔(舊版 .xls 請先另存為 .xlsx)。';return}
   var sheets;try{sheets=await readXlsx(await f.arrayBuffer())}catch(e){er.textContent='無法讀取這個檔案:'+(e&&e.message||e);return}
-  var parts=bookAnalyze(sheets,mode),basic=parts[0],okN=0,bad=0,trs=[],errs=[],warns=[];
+  var parts=bookAnalyze(sheets,mode,window.__imp.disp),basic=parts[0],okN=0,bad=0,trs=[],errs=[],warns=[];
   window.__imp.parts=parts;
   parts.forEach(function(p){
     var ok=p.rows.filter(function(r){return!r.err}).length,nb=p.rows.length-ok,st;
@@ -1553,7 +1732,9 @@ async function bookFile(f){
     p.rows.forEach(function(r){if(r.err)errs.push(p.b.label+(p.b.key==='basic'?'':' 第 '+r.n+' 列')+':'+r.err);else if(r.warn)warns.push(p.b.label+' 第 '+r.n+' 列:'+r.warn)});
     trs.push('<tr><td>'+esc(p.b.label)+'</td><td>'+st+'</td><td>'+esc(p.b.key==='basic'&&p.rows[0]&&!p.rows[0].err?((p.rows[0].d.code||'')+' '+(p.rows[0].d.name||'')):'')+'</td></tr>')});
   var blocked=false;
-  if(mode==='new'){var bp=basic;if(bp.missing||bp.fatal||!bp.rows.length||bp.rows[0].err){blocked=true;er.textContent='要新增方案,需要「基本資料與策略」頁籤且內容正確。'+(bp.missing?'(找不到此頁籤)':'')}}
+  var dp=window.__imp.disp;
+  if(dp){var bq=basic.rows&&basic.rows[0];if(bq&&bq.err){blocked=true;er.textContent='「基本資料與策略」頁籤有錯誤:'+bq.err}if(bq&&!bq.err&&bq.d.code&&bq.d.code!==dp.code)warns.push('Excel 內的事工編碼「'+bq.d.code+'」與督導派發的「'+dp.code+'」不同,將以派發的編碼、中心與年度為準')}
+  else if(mode==='new'){var bp=basic;if(bp.missing||bp.fatal||!bp.rows.length||bp.rows[0].err){blocked=true;er.textContent='要新增方案,需要「基本資料與策略」頁籤且內容正確。'+(bp.missing?'(找不到此頁籤)':'')}}
   pv.innerHTML='<div class="note '+(bad?'warn':'ok')+'" style="margin:0 0 .5rem">共可匯入 <b>'+okN+'</b> 列'+(bad?',有問題 <b>'+bad+'</b>(有問題的列會略過,其餘照常匯入)':'')+'。</div><div class="tw"><table><thead><tr><th>頁籤</th><th>檢查結果</th><th>方案</th></tr></thead><tbody>'+trs.join('')+'</tbody></table></div>'
    +(warns.length?'<div class="note warn" style="margin:.5rem 0 0"><b>提醒(不影響匯入,資料仍會帶入):</b><br>'+warns.slice(0,30).map(esc).join('<br>')+(warns.length>30?'<br>…另有 '+(warns.length-30)+' 項':'')+'</div>':'')
    +(errs.length?'<div class="note warn" style="margin:.5rem 0 0"><b>需要修正的項目(這些列會略過):</b><br>'+errs.slice(0,30).map(esc).join('<br>')+(errs.length>30?'<br>…另有 '+(errs.length-30)+' 項':'')+'</div>':'');
@@ -1564,7 +1745,7 @@ async function bookGo(){
   go.disabled=true;
   try{
     var bp=st.parts[0],bd=(bp&&bp.rows.length&&!bp.rows[0].err)?bp.rows[0].d:null;
-    if(mode==='new'){if(!bd)throw new Error('缺少基本資料');var d0=Object.assign({},bd);d0.owner=uid;d0.status='執行中';d0.approvals={};if(!d0.fy)d0.fy=curFY();pid=await saveDoc('projects',null,d0);done++}
+    if(mode==='new'){if(!bd&&!st.disp)throw new Error('缺少基本資料');var d0=Object.assign({},bd||{});if(st.disp){var da=st.disp,dm=MONTHS.filter(function(m){return da.months&&da.months[m]})[0]||MONTHS[0];d0=Object.assign({},d0,{code:da.code,center:da.center||d0.center,fy:da.fy||d0.fy,name:d0.name||da.name||da.code,month:d0.month||dm,noPlan:da.noplan?'1':(d0.noPlan||'')})}d0.owner=uid;d0.status='執行中';d0.approvals={};if(!d0.fy)d0.fy=curFY();pid=await saveDoc('projects',null,d0);done++}
     else if(bd){var u={};Object.keys(bd).forEach(function(k){var v=bd[k];if(v===''||v==null||(Array.isArray(v)&&!v.length))return;u[k]=v});if(Object.keys(u).length){await saveDoc('projects',pid,u);done++}}
     var total=0;st.parts.forEach(function(p){if(p.b.key!=='basic')total+=p.rows.filter(function(r){return!r.err}).length});
     for(var pi=1;pi<st.parts.length;pi++){
@@ -1753,6 +1934,7 @@ function render(){
   var app=document.getElementById('app');
   if(failed){app.innerHTML='<div class="wrap"><h1>無法開啟資料庫</h1><p class="sub">'+esc(failed)+'</p></div>';return}
   if(!ready){return}
+  if(!MP.loading&&(!MP.at||Date.now()-MP.at>300000))mpLoad();
   var scr=window.scrollY;
   var mine=[],all=[],rev=[];
   S.projects.forEach(function(p){all.push(p);if(p.owner===uid)mine.push(p);if(APPROVER[p.status]===myRole())rev.push(p)});
@@ -1760,6 +1942,7 @@ function render(){
   mine.sort(sorter);all.sort(sorter);rev.sort(sorter);
   var role=myRole();
   if(!isSup()&&(V.tab==='all'||V.tab==='review'))V.tab='home';
+  if(!supOn()&&V.tab==='poa')V.tab='home';
   if(supOn()&&(V.tab==='home'||V.tab==='all'||V.tab==='review'||V.tab==='poa'||V.tab==='project'))V.tab='sup';
   if(V.tab==='sup'&&!supOn())V.tab='home';
   if(V.tab==='sup'&&!TS&&!TM.loading&&!TM.err)supLoad(false);
@@ -1771,7 +1954,7 @@ function render(){
   else if(V.tab==='poa')main=poaView();
   else if(V.tab==='review')main=homeView(rev,'待我審核','輪到你的角色('+role+')核示的方案。',false);
   else main=homeView(mine,'我的方案','你主責的所有方案,可用餘額與近期活動一目了然。',true);
-  var nav=supOn()?[['sup','督導系統']]:[['home','我的方案'],['poa','年度 POA']];
+  var nav=supOn()?[['sup','督導系統']]:[['home','我的方案']];
   var cur=V.tab==='project'?(V.from||'home'):V.tab;
   app.innerHTML='<div class="top"><div class="wrap"><span class="brand">方案成果管理系統</span><nav class="nav" aria-label="主選單">'+nav.map(function(n){return'<button data-a="nav" data-v="'+n[0]+'"'+(cur===n[0]?' aria-current="true"':'')+'>'+n[1]+'</button>'}).join('')+'</nav><div class="who"><button class="btn sm" data-a="profile" title="修改顯示姓名與身分">'+esc(myName()||'設定姓名')+' ✎</button>'+window.__cloudButtons()+'<label for="rolesel" class="ro">身分</label><select id="rolesel" data-change="role">'+ROLES.map(function(r){return'<option'+(r===role?' selected':'')+'>'+r+'</option>'}).join('')+'</select></div></div></div>'
    +'<main class="wrap">'+(canWrite?'':'<div class="note warn" style="margin-top:1rem">你目前是唯讀身分,可以瀏覽但不能修改資料。請向方案擁有者要求「協作者」權限。</div>')+main+'</main>';
@@ -1825,6 +2008,9 @@ var A={
  backup:async function(){try{var o=await window.__localdb.exportAll(),d=new Date(),n='方案系統備份_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.json';await downloads.save({filename:n,data:JSON.stringify(o)});toast('已下載備份檔(含 '+o.docs.length+' 筆資料),請存放在安全的位置')}catch(e){toast('備份失敗')}},
  restore:function(){var inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';inp.onchange=async function(){var f=inp.files[0];if(!f)return;try{var o=JSON.parse(await f.text());if(o.app!=='fangan'||!Array.isArray(o.docs))throw 0;var r=await ask('還原備份檔(含 '+o.docs.length+' 筆資料,備份時間 '+String(o.at||'').slice(0,10)+')?相同的資料會被備份檔內容覆蓋,其餘資料保留(可用來合併同事的備份)。','還原');if(!r)return;var mine=await ask('這份備份是你自己的資料嗎?換電腦或重新安裝後還原自己的備份,請按「是,我自己的」;若是同事交給你的備份,請按「取消」,會以同事的名義合併進來。','是,我自己的');var n=await window.__localdb.importAll(o,!!mine);toast('已還原 '+n+' 筆資料')}catch(e){toast('這不是有效的備份檔')}};inp.click()},
  newProject:function(){openForm('project',null,null)},
+ mpImport:function(d){var a=MP.list[Number(d.i)];if(!a)return;openBook('new');window.__imp.disp=a;var n=document.querySelector('#layer .note.info');if(n)n.insertAdjacentHTML('afterend','<div class="note ok" style="margin:0">匯入到督導派發的方案:<b>'+esc(a.code)+' '+esc(a.name||'')+'</b>(POA 額度 $'+money(a.amount)+(a.noplan?',無須計畫書':'')+')。事工編碼、中心、年度以派發為準;「基本資料與策略」頁籤可省略,預算合計不能超過額度。</div>')},
+ mpRefresh:function(){MP.at=0;MP.err='';mpLoad();sched()},
+ mpCreate:function(d){var a=MP.list[Number(d.i)];if(!a)return;var m1=MONTHS.filter(function(m){return a.months&&a.months[m]})[0]||MONTHS[0];openForm('project',null,null,{code:a.code,name:a.name||'',center:a.center||'',fy:a.fy||curFY(),month:m1,noPlan:a.noplan?'1':''})},
  add:function(d){var extra=d.event?{eventId:d.event}:null;openForm(d.e,V.pid,null,extra)},
  edit:function(d){var E=ENT[d.e];var rec=S[E.col].get(d.id);if(!rec)return;openForm(d.e,V.pid,rec,d.e==='attendance'?{eventId:rec.eventId}:null)},
  del:async function(d){
@@ -1903,6 +2089,8 @@ document.addEventListener('click',function(e){
 document.addEventListener('change',async function(e){
   var ds=e.target.dataset||{};
   if(ds.phcap!==undefined){var ps=window.__ph;if(ps&&ps.list[Number(ds.phcap)]){ps.list[Number(ds.phcap)].c=e.target.value.trim();try{await saveDoc('events',ps.id,{photos:ps.list});var pm=document.getElementById('phmsg');if(pm)pm.textContent='說明已儲存'}catch(x){toast('儲存失敗')}}return}
+  if(ds.noplan!==undefined){var npl=S.poaPlans.get(V.planId);if(npl){var nm0=Object.assign({},npl.noplan||{});if(e.target.value)nm0[ds.noplan]=true;else delete nm0[ds.noplan];try{await saveDoc('poaPlans',npl.id,{noplan:nm0});toast(e.target.value?'已標記為「該案無須計畫書」':'已改為一般方案')}catch(x){toast('儲存失敗')}}return}
+  if(ds.nophoto!==undefined){var pn=window.__ph;if(pn){try{await saveDoc('events',pn.id,{noPhoto:!!e.target.checked});var pm2=document.getElementById('phmsg');if(pm2)pm2.textContent=e.target.checked?'已設定:本場次無須上傳照片':'已取消「無須上傳照片」'}catch(x){toast('儲存失敗')}}return}
   if(ds.phfile!==undefined){await evPhotoAdd([].slice.call(e.target.files));return}
   if(ds.poafile!==undefined){var pf=e.target.files[0];if(pf)await poaFile(pf);e.target.value='';return}
   if(ds.bookfile!==undefined){var f=e.target.files[0];if(f)await bookFile(f);return}
@@ -1917,9 +2105,25 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modalOpen&&
 
 /* ---------- 督導系統(唯讀整合全中心資料) ---------- */
 var TS=null,TM={loading:false,err:'',at:null,users:{}},PHC={};
-var SV={rsel:{},rbusy:false,rmsg:'',rerr:'',sub:'dash',fy:'',center:'',owner:'',st:'',warn:false,mon:'',mp:'',mo:'',ms:'',mq:'',mph:false,sel:{},rep:false,phRun:false,phDone:0,phTot:0,phErr:''};
+var SEC={items:null,loading:false,err:'',imgs:{}};
+async function secLoad(){if(SEC.loading)return;SEC.loading=true;SEC.err='';sched();try{var r=await window.__fun.admin();SEC.items=r.items||[]}catch(e){SEC.err=String(e&&e.message||e);SEC.items=SEC.items||null}SEC.loading=false;sched();
+  var need=(SEC.items||[]).filter(function(x){return x.hasImg&&!SEC.imgs[x.id]});for(var i=0;i<need.length;i++){try{SEC.imgs[need[i].id]=await window.__fun.img(need[i].id);sched()}catch(e){}}}
+function supSec(){
+  if(!SEC.items&&!SEC.loading&&!SEC.err)setTimeout(secLoad,0);
+  var td=today(),h='<div class="note info">這裡設定的內容會顯示在<b>登入畫面右側的「今日小驚喜」</b>:每次開啟登入頁隨機挑一則(盡量與上次不同)。可放文字與照片、設定到期日,也可暫時停用。登入前的畫面所有人都看得到,請勿放入個資,照片請使用自己拍攝或已取得授權的內容,並避免出現兒童可辨識的面孔。</div>'
+   +'<div class="bar nosp"><span class="rem">'+(SEC.loading?'載入中…':SEC.items?'共 '+SEC.items.length+' 則':'')+'</span><span class="actions"><button class="btn sm" data-a="secRefresh">↻ 重新載入</button><button class="btn pri sm" data-a="secNew">＋ 新增小驚喜</button></span></div>';
+  if(SEC.err)h+='<div class="note bad" role="alert">'+esc(SEC.err)+'(若顯示「雲端程式尚未更新」,請把 fun_addon.gs 貼進 Apps Script 並重新部署)</div>';
+  if(!SEC.items)return h;
+  if(!SEC.items.length)return h+'<div class="empty"><b>還沒有設定小驚喜</b>登入畫面目前使用系統內建的備用內容。按「新增小驚喜」建立第一則。</div>';
+  return h+'<div class="tw"><table><thead><tr><th>預覽</th><th>內容</th><th>到期日</th><th>狀態</th><th></th></tr></thead><tbody>'+SEC.items.map(function(x){
+    var exp=x.until&&td>x.until,st=x.on===false?'<span class="pill draft">已停用</span>':exp?'<span class="pill bad">已到期</span>':'<span class="pill run">顯示中</span>';
+    return'<tr><td style="width:6rem">'+(SEC.imgs[x.id]?'<img class="thumb" src="'+esc(SEC.imgs[x.id])+'" alt="">':x.hasImg?'<span class="rem">載入中…</span>':'<span style="font-size:2rem">'+esc(x.emoji||'🌱')+'</span>')+'</td><td><b>'+esc(x.title||'(無標題)')+'</b><div class="rem rest">'+esc(String(x.text||'').slice(0,120))+'</div></td><td>'+esc(x.until||'—')+'</td><td>'+st+'</td><td class="act"><button class="btn sm" data-a="secEdit" data-id="'+esc(x.id)+'">編輯</button> <button class="btn sm" data-a="secToggle" data-id="'+esc(x.id)+'">'+(x.on===false?'啟用':'停用')+'</button> <button class="btn sm bad" data-a="secDel" data-id="'+esc(x.id)+'">刪除</button></td></tr>'}).join('')+'</tbody></table></div>'}
+var SV={rsel:{},rbusy:false,rmsg:'',rerr:'',sub:'poa',fy:'',center:'',owner:'',st:'',warn:false,mon:'',mp:'',mo:'',ms:'',mq:'',mph:false,sel:{},rep:false,phRun:false,phDone:0,phTot:0,phErr:''};
 function supOn(){return!!(window.__isSup&&window.__isSup())}
-function withTeam(fn){var sv=S;S=TS;try{return fn()}finally{S=sv}}
+var POAON=false; /* 年度 POA 只在督導系統內有效:督導自己建置的 POA(自己的資料) + 全中心社工的方案/預算/核銷(TS) 合成一份唯讀+可寫的視圖 */
+function withTeam(fn){var sv=S,po=POAON;S=Object.assign({},TS,{poaPlans:sv.poaPlans,poaVersions:sv.poaVersions});POAON=true;try{return fn()}finally{S=sv;POAON=po}}
+function inSup(fn){return supOn()&&TS?withTeam(fn):fn()}
+var SUPR=['督導','總督導','區處長'];
 function supOwner(p){var u=TM.users[p.owner];if(u&&u.name)return u.name;var s=TS&&TS.staff.get(p.owner);return(s&&s.name)||'(未知同工)'}
 function hm(t){var d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 async function supLoad(force){
@@ -1954,7 +2158,7 @@ function supFlags(p,c){
   c.EV.forEach(function(e){var st=evSt(e);
     if(st==='未辦理'&&(e.endDate||e.date||'9')<td)late++;
     if(st==='已辦理'&&!String(e.summary||'').trim())nos++;
-    if(st==='已辦理'&&!(e.phN>0))nop++});
+    if(st==='已辦理'&&!(e.phN>0)&&!e.noPhoto)nop++});
   if(late)f.push('過期未標記辦理 '+late+' 場');
   if(nos)f.push('已辦理缺執行概況 '+nos+' 場');
   if(nop)f.push('已辦理無照片 '+nop+' 場');
@@ -1989,9 +2193,9 @@ function supView(){
     return h+(TM.err?'<div class="note bad">'+esc(TM.err)+'</div><button class="btn" data-a="supRefresh">再試一次</button>':'<div class="note info" role="status">正在從 Google 雲端整合所有社工的資料,人數與照片多時可能需要十幾秒…</div>');
   }
   if(TM.err)h+='<div class="note bad">'+esc(TM.err)+'(目前顯示的是上一次載入的資料)</div>';
-  var tabs=[['dash','中心總覽'],['ana','數據分析'],['poa','年度 POA(全中心)'],['mon','月度場次與照片'],['rpt','成果報告下載']];
-  h+='<div class="tabs nosp" role="tablist">'+tabs.map(function(t){return'<button role="tab" data-a="supsub" data-v="'+t[0]+'" aria-selected="'+(SV.sub===t[0])+'">'+t[1]+'</button>'}).join('')+'</div>';
-  return h+withTeam(function(){return SV.sub==='ana'?supAna():SV.sub==='mon'?supMon():SV.sub==='poa'?supPoa():SV.sub==='rpt'?supRpt():supDash()});
+  var tabs=[['poa','年度 POA'],['dash','中心總覽'],['ana','數據分析'],['mon','月度場次與照片'],['rpt','成果報告下載'],['sec','秘']];
+  h+='<div class="tabs nosp" role="tablist">'+tabs.map(function(t){return'<button role="tab" data-a="supsub" data-v="'+t[0]+'" aria-selected="'+(SV.sub===t[0])+'"'+(t[0]==='sec'?' title="登入畫面小驚喜設定" style="font-size:.72rem;padding:.3rem .55rem;opacity:.65"':'')+'>'+t[1]+'</button>'}).join('')+'</div>';
+  return h+withTeam(function(){return SV.sub==='ana'?supAna():SV.sub==='mon'?supMon():SV.sub==='poa'?supPoa():SV.sub==='rpt'?supRpt():SV.sub==='sec'?supSec():supDash()});
 }
 function supFilterBar(noWarn){
   var fy={},ce={},ow={};TS.projects.forEach(function(p){fy[p.fy||'FY26']=1;ce[p.center||'']=1;ow[p.owner]=1});
@@ -2142,7 +2346,7 @@ function supMon(){
    +(list.length?'<div class="evlist">'+supGroups(list).map(function(g){var p=TS.projects.get(g.id)||{},k=g.list.filter(function(e){return SV.sel[e.id]}).length,all=k===g.list.length;
       return'<div class="evgrp"><div class="gh"><b>'+esc(p.name||'(未命名方案)')+'</b><small>'+esc((p.code?p.code+' ・ ':'')+supOwner(p)+' ・ '+g.list.length+' 場')+'</small><button class="btn sm" data-a="supSelPj" data-id="'+esc(g.id)+'">'+(all?'取消此方案':'全選此方案')+'</button></div>'
        +g.list.map(function(e){var a=att[e.id],st=evSt(e);
-        return'<label class="evpick"><input type="checkbox" data-pick value="'+esc(e.id)+'"'+(SV.sel[e.id]?' checked':'')+'><span class="d">'+esc(e.date.slice(5))+(e.endDate&&e.endDate>e.date?'~'+esc(e.endDate.slice(5)):'')+'<small>'+esc(e.start||'')+'</small></span><span class="n"><b>'+esc(e.name||'(未命名)')+'</b><small>'+esc(e.place||'')+'</small></span><span class="m"><span class="pill '+(st==='已辦理'?'run':st==='取消'?'draft':'wait')+'">'+st+'</span><small>'+(a?a.times+' 人次 ':'')+(e.phN>0?'📷'+e.phN+' ':'')+(String(e.summary||'').trim()?'':'<span style="color:var(--warn)">缺概況</span>')+'</small></span></label>'}).join('')+'</div>'}).join('')+'</div>':'<div class="empty" style="margin:0"><b>這個條件下沒有場次</b>請調整篩選條件。</div>')
+        return'<label class="evpick"><input type="checkbox" data-pick value="'+esc(e.id)+'"'+(SV.sel[e.id]?' checked':'')+'><span class="d">'+esc(e.date.slice(5))+(e.endDate&&e.endDate>e.date?'~'+esc(e.endDate.slice(5)):'')+'<small>'+esc(e.start||'')+'</small></span><span class="n"><b>'+esc(e.name||'(未命名)')+'</b><small>'+esc(e.place||'')+'</small></span><span class="m"><span class="pill '+(st==='已辦理'?'run':st==='取消'?'draft':'wait')+'">'+st+'</span><small>'+(a?a.times+' 人次 ':'')+(e.phN>0?'📷'+e.phN+' ':e.noPhoto?'無須照片 ':'')+(String(e.summary||'').trim()?'':'<span style="color:var(--warn)">缺概況</span>')+'</small></span></label>'}).join('')+'</div>'}).join('')+'</div>':'<div class="empty" style="margin:0"><b>這個條件下沒有場次</b>請調整篩選條件。</div>')
    +'</div></section>';
   if(SV.rep&&sel.length){
     h+='<div class="actions nosp" style="margin:.8rem 0"><button class="btn pri" data-a="supPrint">🖨 列印 / 存成 PDF</button><button class="btn" data-a="supDoc">⬇ 下載 Word 檔(.doc)</button><button class="btn" data-a="supRepHide">收起月報</button>'
@@ -2221,7 +2425,7 @@ function supRptProg(p,c){
   var parts=[
     {l:'場次已辦理',a:done.length,b:evs.length,miss:evs.length?(evs.length-done.length?'尚有 '+(evs.length-done.length)+' 場未辦理':''):'尚未建立場次'},
     {l:'執行概況',a:done.filter(function(e){return String(e.summary||'').trim()}).length,b:done.length,miss:''},
-    {l:'活動照片',a:done.filter(function(e){return e.phN>0}).length,b:done.length,miss:''},
+    {l:'活動照片',a:done.filter(function(e){return e.phN>0||e.noPhoto}).length,b:done.length,miss:''},
     {l:'成效評估',a:objs.filter(function(o){return String(o.result||'').trim()}).length,b:objs.length,miss:''},
     {l:'自評及期待',a:String(p.selfEval||'').trim()?1:0,b:1,miss:''}];
   var miss=[],sum=0;
@@ -2279,7 +2483,12 @@ document.addEventListener('change',function(e){
 });
 document.addEventListener('input',function(e){var t=e.target;if(t&&t.hasAttribute&&t.hasAttribute('data-sq')){SV.mq=t.value;clearTimeout(SV._qt);SV._qt=setTimeout(function(){sched();setTimeout(function(){var i=document.querySelector('[data-sq]');if(i){i.focus();try{i.setSelectionRange(i.value.length,i.value.length)}catch(x){}}},0)},350)}});
 Object.assign(A,{
-  supsub:function(d){SV.sub=d.v;sched()},
+  supsub:function(d){SV.sub=d.v;if(d.v==='sec'&&!SEC.items)secLoad();sched()},
+  secNew:function(){openForm('funitem',null,null)},
+  secEdit:function(d){var it=(SEC.items||[]).filter(function(x){return x.id===d.id})[0];if(it)openForm('funitem',null,Object.assign({},it,{photo:SEC.imgs[it.id]||'',on:it.on===false?'0':'1'}))},
+  secToggle:async function(d){var it=(SEC.items||[]).filter(function(x){return x.id===d.id})[0];if(!it)return;try{await window.__fun.save(Object.assign({},it,{on:it.on===false}));toast(it.on===false?'已設為顯示':'已停用');SEC.items=null;secLoad()}catch(e){toast(String(e&&e.message||e))}},
+  secDel:async function(d){var ok=await ask('刪除這則小驚喜(含照片)?無法復原。','刪除');if(!ok)return;try{await window.__fun.del(d.id);toast('已刪除');SEC.items=null;secLoad()}catch(e){toast(String(e&&e.message||e))}},
+  secRefresh:function(){SEC.items=null;SEC.err='';secLoad()},
   supRptAll:function(){supRptRows().forEach(function(r){SV.rsel[r.p.id]=true});sched()},
   supRptFull:function(){SV.rsel={};supRptRows().forEach(function(r){if(r.g.pct>=100)SV.rsel[r.p.id]=true});sched()},
   supRptClosed:function(){SV.rsel={};supRptRows().forEach(function(r){if(pst(r.p)!=='執行中')SV.rsel[r.p.id]=true});sched()},
@@ -2355,7 +2564,7 @@ async function boot(){
     var first=true;
     db.collection(col).onSnapshot(function(snap){
       var m=new Map();snap.docs.forEach(function(d){m.set(d.id,Object.assign({id:d.id},d.data()))});
-      S[col]=m;
+      SREAL[col]=m;
       if(first){first=false;pending--;if(pending===0){ready=true}}
       if(col==='projects')resolveNames();
       if(col==='budgets'||col==='budgetVersions')bvSchedule();
@@ -2371,6 +2580,54 @@ function resolveNames(){
   user.profiles(ids).then(function(ps){var ch=false;ids.forEach(function(i){var n=ps[i]&&ps[i].name;if(n&&names[i]!==n){names[i]=n;ch=true}});if(ch)sched()});
 }
 boot();
+/* ----- 督導:派發 / 交接 ----- */
+function poaHandoverOpen(code,slot,item){
+  var plan=S.poaPlans.get(V.planId),vs=plan?versionsOf(plan.id):[],v=vs[vs.length-1];if(!v)return;
+  window.__poaCenter=plan.center;
+  var sls=asgSlots(v,code),si=Math.min(Number(slot)||0,sls.length),ch=sls[si]?sls[si].chain:[],cur=ch.length?ch[ch.length-1]:null,first=!ch.length;
+  var lab=(sls.length>1||si>=sls.length&&sls.length)?'(方案 '+(si+1)+')':'';
+  window.__ho={code:code,vid:v.id,slot:si,item:(item===undefined||item===''||item===null)?-1:Number(item)};
+  var el=document.getElementById('layer');
+  el.innerHTML='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><header id="mt">'+(first?(si>=sls.length&&sls.length?'同編碼新增方案並派發':'派發方案'):'交接 / 更換執行人員')+lab+'：'+esc(code)+' '+esc(codeName(code,v))+'</header><div style="padding:1rem 1.1rem;display:grid;gap:.8rem">'
+   +(cur?'<div class="note info" style="margin:0">目前承辦:<b>'+esc(cur.name||'?')+'</b>。社工年度中離職或轉調時,在這裡指定接手人員:原承辦的姓名與其方案會保留在紀錄中(標示為離職/已交接),接手人員自指定月份起承接。</div>':'<div class="note info" style="margin:0">一個事工編碼可以有 2–3 個方案(可由不同社工承辦)。把方案派發給承辦社工並綁定他的方案,系統才能比對計畫書預算與核銷;同編碼的方案合計對照這個編碼的 POA 金額。</div>')
+   +'<div class="fld"><label for="hoUser">'+(first?'承辦社工':'接手人員')+' <i>*</i></label><select id="hoUser">'+poaUserOpts('', '請選擇社工')+'</select></div>'
+   +(first?'':'<div class="fld"><label for="hoMon">自哪個月份起接手 <i>*</i></label><select id="hoMon">'+MONTHS.map(function(m){return'<option>'+m+'</option>'}).join('')+'</select></div><div class="fld"><label for="hoNote">交接說明(選填,例:原承辦離職)</label><input type="text" id="hoNote"></div>')
+   +'<div class="fld"><label for="hoBind">綁定方案</label><select id="hoBind">'+poaBindOpts('', '')+'</select><div class="help">選了承辦社工後,只列出他的方案。</div></div>'
+   +'<div class="err" id="hoerr" role="alert"></div><div class="foot"><button type="button" class="btn" data-a="mclose">取消</button><button type="button" class="btn pri" data-a="poaHoSave" id="hosave">'+(first?'儲存派發':'確認交接')+'</button></div></div></div></div>';
+  modalOpen=true;
+  el.onchange=function(e){var t=e.target;if(t&&t.id==='hoUser'){inSup(function(){var b=document.getElementById('hoBind'),m=null;b.innerHTML=poaBindOpts('',t.value);if(t.value)S.projects.forEach(function(x){if(x.owner===t.value&&x.center===window.__poaCenter&&x.code===code&&!m)m=x});if(m)b.value=m.id})}}
+}
+function poaHandoverSave(){
+  var ctx=window.__ho,err=document.getElementById('hoerr');err.textContent='';
+  var plan=S.poaPlans.get(V.planId),v=S.poaVersions.get(ctx.vid),code=ctx.code;if(!plan||!v)return;
+  var uv=document.getElementById('hoUser').value;if(!uv){err.textContent='請選擇社工。';return}
+  var sls=asgSlots(v,code).map(function(sl){return sl.chain.map(function(a){return Object.assign({},a)})}),si=ctx.slot;
+  var chain=sls[si]||[],cur=chain.length?chain[chain.length-1]:null;
+  if(cur&&cur.uid===uv){err.textContent='接手人員與目前承辦相同。';return}
+  var monEl=document.getElementById('hoMon'),mon=monEl?monEl.value:'',pid=document.getElementById('hoBind').value;
+  if(pid){var used={};Object.keys(v.binds||{}).forEach(function(c){used[v.binds[c]]=c});Object.keys(v.more||{}).forEach(function(c){(v.more[c]||[]).forEach(function(id){used[id]=c})});if(cur&&cur.pid)delete used[cur.pid];if(used[pid]){err.textContent='這個方案已綁定在事工編碼「'+used[pid]+'」。';return}}
+  var u=TM.users[uv],nm=(u&&u.name)||'';
+  if(cur){cur.left=true;var ne=document.getElementById('hoNote');if(ne&&ne.value.trim())cur.leftNote=ne.value.trim();cur.leftFrom=mon}
+  chain.push({uid:uv,name:nm,pid:pid||'',from:cur?mon:''});sls[si]=chain;
+  var sf=poaSlotFields(sls);
+  var slots=Object.assign({},v.slots||{});slots[code]=sls;
+  var binds=Object.assign({},v.binds||{}),more=Object.assign({},v.more||{}),prior=Object.assign({},v.prior||{});
+  if(sf.bind)binds[code]=sf.bind;else delete binds[code];
+  if(sf.more.length)more[code]=sf.more;else delete more[code];
+  var alloc=Object.assign({},v.alloc||{});if(cur&&cur.pid&&pid&&pid!==cur.pid&&alloc[code]&&alloc[code][cur.pid]!=null){alloc[code]=Object.assign({},alloc[code]);alloc[code][pid]=alloc[code][cur.pid]}
+  var pl=(prior[code]||[]).slice();sf.prior.forEach(function(id){if(pl.indexOf(id)<0)pl.push(id)});if(pl.length)prior[code]=pl;
+  var b=document.getElementById('hosave');b.disabled=true;
+  var itemsN=(v.items||[]).map(function(x){return Object.assign({},x,{slotIdx:(x.slotIdx||[]).slice()})});if(ctx.item>=0&&itemsN[ctx.item]&&itemsN[ctx.item].slotIdx.indexOf(si)<0)itemsN[ctx.item].slotIdx.push(si);
+  saveDoc('poaVersions',v.id,Object.assign({slots:slots,binds:binds,more:more,prior:prior,alloc:alloc},v.items?{items:itemsN}:{})).then(function(){closeModal();toast(cur?'已交接,原承辦姓名已保留':'已派發');sched()}).catch(function(){b.disabled=false});
+}
+Object.assign(A,{poaHandover:function(d){poaHandoverOpen(d.code,d.slot,d.item)},poaHoSave:function(){poaHandoverSave()},
+  poaAddSlot:function(d,t){var td=t.closest('td'),box=td.querySelector('.slots'),n=box.querySelectorAll('.slot').length;if(n>=6){toast('同一事工編碼最多 6 個方案');return}box.insertAdjacentHTML('beforeend',poaSlotHtml({chain:[],bind:''},n))},
+  poaDelSlot:function(d,t){var sl=t.closest('.slot'),box=sl.parentElement,ch=[];try{ch=JSON.parse(sl.dataset.chain||'[]')}catch(x){}
+    if(ch.length>1){toast('這個方案已有交接紀錄,不能移除');return}
+    if(box.querySelectorAll('.slot').length>1){sl.remove();[].slice.call(box.querySelectorAll('.slb')).forEach(function(l,i){l.firstChild.nodeValue='方案 '+(i+1)+' '})}
+    else{sl.querySelector('.pasg').value='';var bs=sl.querySelector('.pbind');bs.innerHTML=poaBindOpts('','');sl.dataset.chain='[]'}poaRecalc()}});
+['poaNew','poaMemo','poaEdit0','poaImportBtn','poaAddRow','poaDelRow','poaAddSlot','poaDelSlot','poaSave','poaDelLatest','poaDelPlan','poaHandover','poaHoSave','poaver','poametric','poaplan'].forEach(function(k){var f=A[k];if(f)A[k]=function(d,t){return inSup(function(){return f(d,t)})}});
+
 })();
 </script>
 </body>
